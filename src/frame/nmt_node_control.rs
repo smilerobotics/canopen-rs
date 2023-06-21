@@ -1,4 +1,4 @@
-use crate::frame::CANOpenFrame;
+use crate::frame::ToSocketCANFrame;
 use crate::id::{CommunicationObject, NodeID};
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -46,7 +46,7 @@ impl NMTNodeControlFrame {
     }
 }
 
-impl CANOpenFrame for NMTNodeControlFrame {
+impl ToSocketCANFrame for NMTNodeControlFrame {
     fn communication_object(&self) -> CommunicationObject {
         CommunicationObject::NMTNodeControl
     }

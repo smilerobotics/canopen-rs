@@ -17,3 +17,6 @@ pub trait CANOpenFrame {
 
 mod nmt_node_control;
 pub use nmt_node_control::{NMTCommand, NMTNodeControlAddress, NMTNodeControlFrame};
+
+mod sdo;
+pub use sdo::SDOFrame;

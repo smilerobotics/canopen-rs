@@ -82,6 +82,78 @@ mod tests {
     }
 
     #[test]
+    fn test_communication_object() {
+        let frame =
+            NMTNodeControlFrame::new(NMTCommand::Operational, NMTNodeControlAddress::AllNodes);
+        assert_eq!(
+            frame.communication_object(),
+            CommunicationObject::NMTNodeControl
+        );
+        let frame = NMTNodeControlFrame::new(NMTCommand::Stopped, NMTNodeControlAddress::Node(1));
+        assert_eq!(
+            frame.communication_object(),
+            CommunicationObject::NMTNodeControl
+        );
+        let frame =
+            NMTNodeControlFrame::new(NMTCommand::PreOperational, NMTNodeControlAddress::Node(2));
+        assert_eq!(
+            frame.communication_object(),
+            CommunicationObject::NMTNodeControl
+        );
+        let frame = NMTNodeControlFrame::new(NMTCommand::ResetNode, NMTNodeControlAddress::Node(3));
+        assert_eq!(
+            frame.communication_object(),
+            CommunicationObject::NMTNodeControl
+        );
+
+        let frame = NMTNodeControlFrame::new(
+            NMTCommand::ResetCommunication,
+            NMTNodeControlAddress::Node(127),
+        );
+        assert_eq!(
+            frame.communication_object(),
+            CommunicationObject::NMTNodeControl
+        );
+    }
+
+    #[test]
+    fn test_set_data() {
+        let mut buf = [0u8; 8];
+
+        let frame_data_size =
+            NMTNodeControlFrame::new(NMTCommand::Operational, NMTNodeControlAddress::AllNodes)
+                .set_data(&mut buf);
+        assert_eq!(frame_data_size, 2);
+        assert_eq!(&buf[..frame_data_size], &[0x01, 0x00]);
+
+        let frame_data_size =
+            NMTNodeControlFrame::new(NMTCommand::Stopped, NMTNodeControlAddress::Node(1))
+                .set_data(&mut buf);
+        assert_eq!(frame_data_size, 2);
+        assert_eq!(&buf[..frame_data_size], &[0x02, 0x01]);
+
+        let frame_data_size =
+            NMTNodeControlFrame::new(NMTCommand::PreOperational, NMTNodeControlAddress::Node(2))
+                .set_data(&mut buf);
+        assert_eq!(frame_data_size, 2);
+        assert_eq!(&buf[..frame_data_size], &[0x80, 0x02]);
+
+        let frame_data_size =
+            NMTNodeControlFrame::new(NMTCommand::ResetNode, NMTNodeControlAddress::Node(3))
+                .set_data(&mut buf);
+        assert_eq!(frame_data_size, 2);
+        assert_eq!(&buf[..frame_data_size], &[0x81, 0x03]);
+
+        let frame_data_size = NMTNodeControlFrame::new(
+            NMTCommand::ResetCommunication,
+            NMTNodeControlAddress::Node(127),
+        )
+        .set_data(&mut buf);
+        assert_eq!(frame_data_size, 2);
+        assert_eq!(&buf[..frame_data_size], &[0x82, 0x7F]);
+    }
+
+    #[test]
     fn test_nmt_node_control_frame_to_socketcan_frame() {
         let frame =
             NMTNodeControlFrame::new(NMTCommand::Operational, NMTNodeControlAddress::AllNodes)

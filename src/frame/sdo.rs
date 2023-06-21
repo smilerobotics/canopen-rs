@@ -1,4 +1,4 @@
-use crate::frame::CANOpenFrame;
+use crate::frame::ToSocketCANFrame;
 use crate::id::{CommunicationObject, NodeID};
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -39,7 +39,7 @@ pub struct SDOFrame {
 impl SDOFrame {
     const FRAME_DATA_SIZE: usize = 8;
 
-    pub fn sdo_read_frame(node_id: NodeID, index: u16, sub_index: u8) -> Self {
+    pub fn new_sdo_read_frame(node_id: NodeID, index: u16, sub_index: u8) -> Self {
         Self {
             direction: Direction::Rx,
             node_id: node_id,
@@ -52,7 +52,7 @@ impl SDOFrame {
         }
     }
 
-    pub fn sdo_write_frame(node_id: NodeID, index: u16, sub_index: u8, data: &[u8]) -> Self {
+    pub fn new_sdo_write_frame(node_id: NodeID, index: u16, sub_index: u8, data: &[u8]) -> Self {
         Self {
             direction: Direction::Rx,
             node_id: node_id,
@@ -66,7 +66,7 @@ impl SDOFrame {
     }
 }
 
-impl CANOpenFrame for SDOFrame {
+impl ToSocketCANFrame for SDOFrame {
     fn communication_object(&self) -> CommunicationObject {
         match self.direction {
             Direction::Tx => CommunicationObject::TxSDO(self.node_id),
@@ -102,7 +102,7 @@ mod tests {
 
     #[test]
     fn test_sdo_read_frame() {
-        let frame = SDOFrame::sdo_read_frame(1, 0x1018, 2); // Product code
+        let frame = SDOFrame::new_sdo_read_frame(1, 0x1018, 2); // Product code
         assert_eq!(
             frame,
             SDOFrame {
@@ -120,7 +120,7 @@ mod tests {
 
     #[test]
     fn test_sdo_write_frame() {
-        let frame = SDOFrame::sdo_write_frame(1, 0x1402, 2, &[255]); // Transmission type RxPDO3
+        let frame = SDOFrame::new_sdo_write_frame(1, 0x1402, 2, &[255]); // Transmission type RxPDO3
         assert_eq!(
             frame,
             SDOFrame {
@@ -135,7 +135,7 @@ mod tests {
             }
         );
 
-        let frame = SDOFrame::sdo_write_frame(2, 0x1017, 0, &(1000u16.to_le_bytes())); // Producer heartbeat time
+        let frame = SDOFrame::new_sdo_write_frame(2, 0x1017, 0, &(1000u16.to_le_bytes())); // Producer heartbeat time
         assert_eq!(
             frame,
             SDOFrame {
@@ -150,7 +150,7 @@ mod tests {
             }
         );
 
-        let frame = SDOFrame::sdo_write_frame(3, 0x1200, 1, &(0x060Au32.to_le_bytes())); // COB-ID SDO client to server
+        let frame = SDOFrame::new_sdo_write_frame(3, 0x1200, 1, &(0x060Au32.to_le_bytes())); // COB-ID SDO client to server
         assert_eq!(
             frame,
             SDOFrame {
@@ -341,15 +341,14 @@ mod tests {
 
     #[test]
     fn test_sdo_frame_to_socketcan_frame() {
-        let frame = SDOFrame::sdo_read_frame(1, 0x1018, 2) // Product code
-            .to_socketcan_frame();
+        let frame = SDOFrame::new_sdo_read_frame(1, 0x1018, 2).to_socketcan_frame(); // Product code
         assert_eq!(frame.raw_id(), 0x601);
         assert_eq!(
             frame.data(),
             &[0x40, 0x18, 0x10, 0x02, 0x00, 0x00, 0x00, 0x00]
         );
 
-        let frame = SDOFrame::sdo_write_frame(1, 0x1402, 2, &[255]) // Transmission type RxPDO3
+        let frame = SDOFrame::new_sdo_write_frame(1, 0x1402, 2, &[255]) // Transmission type RxPDO3
             .to_socketcan_frame();
         assert_eq!(frame.raw_id(), 0x601);
         assert_eq!(
@@ -357,7 +356,7 @@ mod tests {
             &[0x2F, 0x02, 0x14, 0x02, 0xFF, 0x00, 0x00, 0x00]
         );
 
-        let frame = SDOFrame::sdo_write_frame(2, 0x1017, 0, &(1000u16.to_le_bytes())) // Producer heartbeat time
+        let frame = SDOFrame::new_sdo_write_frame(2, 0x1017, 0, &(1000u16.to_le_bytes())) // Producer heartbeat time
             .to_socketcan_frame();
         assert_eq!(frame.raw_id(), 0x602);
         assert_eq!(
@@ -365,7 +364,7 @@ mod tests {
             &[0x2B, 0x17, 0x10, 0x00, 0xE8, 0x03, 0x00, 0x00]
         );
 
-        let frame = SDOFrame::sdo_write_frame(3, 0x1200, 1, &(0x060Au32.to_le_bytes())) // COB-ID SDO client to server
+        let frame = SDOFrame::new_sdo_write_frame(3, 0x1200, 1, &(0x060Au32.to_le_bytes())) // COB-ID SDO client to server
             .to_socketcan_frame();
         assert_eq!(frame.raw_id(), 0x603);
         assert_eq!(

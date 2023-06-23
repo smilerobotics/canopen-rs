@@ -1,4 +1,4 @@
-use socketcan::embedded_can::Frame;
+use socketcan::EmbeddedFrame;
 
 use crate::id::{CommunicationObject, NodeID};
 

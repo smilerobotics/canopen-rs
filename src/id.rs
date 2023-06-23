@@ -1,5 +1,3 @@
-use socketcan::{embedded_can::StandardId, Id};
-
 pub type NodeID = u8;
 type RawIDType = u16;
 
@@ -51,9 +49,9 @@ impl From<CommunicationObject> for RawIDType {
 }
 
 // TODO: define original error type and change this to TryFrom
-impl From<CommunicationObject> for Id {
+impl From<CommunicationObject> for socketcan::Id {
     fn from(cob: CommunicationObject) -> Self {
-        Id::Standard(StandardId::new(cob.into()).unwrap())
+        socketcan::Id::Standard(socketcan::StandardId::new(cob.into()).unwrap())
     }
 }
 
@@ -103,41 +101,95 @@ mod tests {
 
     #[test]
     fn test_into_id() {
-        let id: Id = CommunicationObject::NMTNodeControl.into();
-        assert_eq!(id, Id::Standard(StandardId::new(0x000).unwrap()));
-        let id: Id = CommunicationObject::GlobalFailsafeCommand.into();
-        assert_eq!(id, Id::Standard(StandardId::new(0x001).unwrap()));
-        let id: Id = CommunicationObject::Sync.into();
-        assert_eq!(id, Id::Standard(StandardId::new(0x080).unwrap()));
-        let id: Id = CommunicationObject::Emergency(1).into();
-        assert_eq!(id, Id::Standard(StandardId::new(0x081).unwrap()));
-        let id: Id = CommunicationObject::TimeStamp.into();
-        assert_eq!(id, Id::Standard(StandardId::new(0x100).unwrap()));
-        let id: Id = CommunicationObject::TxPDO1(2).into();
-        assert_eq!(id, Id::Standard(StandardId::new(0x182).unwrap()));
-        let id: Id = CommunicationObject::RxPDO1(3).into();
-        assert_eq!(id, Id::Standard(StandardId::new(0x203).unwrap()));
-        let id: Id = CommunicationObject::TxPDO2(4).into();
-        assert_eq!(id, Id::Standard(StandardId::new(0x284).unwrap()));
-        let id: Id = CommunicationObject::RxPDO2(5).into();
-        assert_eq!(id, Id::Standard(StandardId::new(0x305).unwrap()));
-        let id: Id = CommunicationObject::TxPDO3(6).into();
-        assert_eq!(id, Id::Standard(StandardId::new(0x386).unwrap()));
-        let id: Id = CommunicationObject::RxPDO3(7).into();
-        assert_eq!(id, Id::Standard(StandardId::new(0x407).unwrap()));
-        let id: Id = CommunicationObject::TxPDO4(8).into();
-        assert_eq!(id, Id::Standard(StandardId::new(0x488).unwrap()));
-        let id: Id = CommunicationObject::RxPDO4(9).into();
-        assert_eq!(id, Id::Standard(StandardId::new(0x509).unwrap()));
-        let id: Id = CommunicationObject::TxSDO(10).into();
-        assert_eq!(id, Id::Standard(StandardId::new(0x58A).unwrap()));
-        let id: Id = CommunicationObject::RxSDO(11).into();
-        assert_eq!(id, Id::Standard(StandardId::new(0x60B).unwrap()));
-        let id: Id = CommunicationObject::NMTNodeMonitoring(12).into();
-        assert_eq!(id, Id::Standard(StandardId::new(0x70C).unwrap()));
-        let id: Id = CommunicationObject::TxLSS.into();
-        assert_eq!(id, Id::Standard(StandardId::new(0x7E4).unwrap()));
-        let id: Id = CommunicationObject::RxLSS.into();
-        assert_eq!(id, Id::Standard(StandardId::new(0x7E5).unwrap()));
+        let id: socketcan::Id = CommunicationObject::NMTNodeControl.into();
+        assert_eq!(
+            id,
+            socketcan::Id::Standard(socketcan::StandardId::new(0x000).unwrap())
+        );
+        let id: socketcan::Id = CommunicationObject::GlobalFailsafeCommand.into();
+        assert_eq!(
+            id,
+            socketcan::Id::Standard(socketcan::StandardId::new(0x001).unwrap())
+        );
+        let id: socketcan::Id = CommunicationObject::Sync.into();
+        assert_eq!(
+            id,
+            socketcan::Id::Standard(socketcan::StandardId::new(0x080).unwrap())
+        );
+        let id: socketcan::Id = CommunicationObject::Emergency(1).into();
+        assert_eq!(
+            id,
+            socketcan::Id::Standard(socketcan::StandardId::new(0x081).unwrap())
+        );
+        let id: socketcan::Id = CommunicationObject::TimeStamp.into();
+        assert_eq!(
+            id,
+            socketcan::Id::Standard(socketcan::StandardId::new(0x100).unwrap())
+        );
+        let id: socketcan::Id = CommunicationObject::TxPDO1(2).into();
+        assert_eq!(
+            id,
+            socketcan::Id::Standard(socketcan::StandardId::new(0x182).unwrap())
+        );
+        let id: socketcan::Id = CommunicationObject::RxPDO1(3).into();
+        assert_eq!(
+            id,
+            socketcan::Id::Standard(socketcan::StandardId::new(0x203).unwrap())
+        );
+        let id: socketcan::Id = CommunicationObject::TxPDO2(4).into();
+        assert_eq!(
+            id,
+            socketcan::Id::Standard(socketcan::StandardId::new(0x284).unwrap())
+        );
+        let id: socketcan::Id = CommunicationObject::RxPDO2(5).into();
+        assert_eq!(
+            id,
+            socketcan::Id::Standard(socketcan::StandardId::new(0x305).unwrap())
+        );
+        let id: socketcan::Id = CommunicationObject::TxPDO3(6).into();
+        assert_eq!(
+            id,
+            socketcan::Id::Standard(socketcan::StandardId::new(0x386).unwrap())
+        );
+        let id: socketcan::Id = CommunicationObject::RxPDO3(7).into();
+        assert_eq!(
+            id,
+            socketcan::Id::Standard(socketcan::StandardId::new(0x407).unwrap())
+        );
+        let id: socketcan::Id = CommunicationObject::TxPDO4(8).into();
+        assert_eq!(
+            id,
+            socketcan::Id::Standard(socketcan::StandardId::new(0x488).unwrap())
+        );
+        let id: socketcan::Id = CommunicationObject::RxPDO4(9).into();
+        assert_eq!(
+            id,
+            socketcan::Id::Standard(socketcan::StandardId::new(0x509).unwrap())
+        );
+        let id: socketcan::Id = CommunicationObject::TxSDO(10).into();
+        assert_eq!(
+            id,
+            socketcan::Id::Standard(socketcan::StandardId::new(0x58A).unwrap())
+        );
+        let id: socketcan::Id = CommunicationObject::RxSDO(11).into();
+        assert_eq!(
+            id,
+            socketcan::Id::Standard(socketcan::StandardId::new(0x60B).unwrap())
+        );
+        let id: socketcan::Id = CommunicationObject::NMTNodeMonitoring(12).into();
+        assert_eq!(
+            id,
+            socketcan::Id::Standard(socketcan::StandardId::new(0x70C).unwrap())
+        );
+        let id: socketcan::Id = CommunicationObject::TxLSS.into();
+        assert_eq!(
+            id,
+            socketcan::Id::Standard(socketcan::StandardId::new(0x7E4).unwrap())
+        );
+        let id: socketcan::Id = CommunicationObject::RxLSS.into();
+        assert_eq!(
+            id,
+            socketcan::Id::Standard(socketcan::StandardId::new(0x7E5).unwrap())
+        );
     }
 }

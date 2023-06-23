@@ -38,6 +38,8 @@ pub struct NMTNodeControlFrame {
 }
 
 impl NMTNodeControlFrame {
+    const FRAME_DATA_SIZE: usize = 2;
+
     pub fn new(command: NMTCommand, address: NMTNodeControlAddress) -> Self {
         Self {
             command: command,
@@ -52,9 +54,11 @@ impl ToSocketCANFrame for NMTNodeControlFrame {
     }
 
     fn set_data(&self, buf: &mut [u8]) -> usize {
+        assert!(buf.len() >= Self::FRAME_DATA_SIZE);
+
         buf[0] = self.command.to_byte();
         buf[1] = self.address.to_byte();
-        2
+        Self::FRAME_DATA_SIZE
     }
 }
 

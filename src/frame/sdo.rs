@@ -38,6 +38,7 @@ pub struct SDOFrame {
 
 impl SDOFrame {
     const FRAME_DATA_SIZE: usize = 8;
+    const DATA_CONTENT_SIZE: usize = 4;
 
     pub fn new_sdo_read_frame(node_id: NodeID, index: u16, sub_index: u8) -> Self {
         Self {
@@ -76,7 +77,7 @@ impl ToSocketCANFrame for SDOFrame {
 
     fn set_data(&self, buf: &mut [u8]) -> usize {
         assert!(buf.len() >= Self::FRAME_DATA_SIZE);
-        assert!(self.data.len() <= 4);
+        assert!(self.data.len() <= Self::DATA_CONTENT_SIZE);
 
         buf[0] = ((self.ccs as u8) << 5)
             + match self.size_specified {
@@ -259,7 +260,7 @@ mod tests {
             data: vec![],
         }
         .set_data(&mut buf);
-        assert_eq!(frame_data_size, SDOFrame::FRAME_DATA_SIZE);
+        assert_eq!(frame_data_size, 8);
         assert_eq!(
             &buf[..frame_data_size],
             &[0x40, 0x18, 0x10, 0x02, 0x00, 0x00, 0x00, 0x00]
@@ -278,7 +279,7 @@ mod tests {
             data: vec![0xFF],
         }
         .set_data(&mut buf);
-        assert_eq!(frame_data_size, SDOFrame::FRAME_DATA_SIZE);
+        assert_eq!(frame_data_size, 8);
         assert_eq!(
             &buf[..frame_data_size],
             &[0x2F, 0x02, 0x14, 0x02, 0xFF, 0x00, 0x00, 0x00]
@@ -297,7 +298,7 @@ mod tests {
             data: vec![0xE8, 0x03],
         }
         .set_data(&mut buf);
-        assert_eq!(frame_data_size, SDOFrame::FRAME_DATA_SIZE);
+        assert_eq!(frame_data_size, 8);
         assert_eq!(
             &buf[..frame_data_size],
             &[0x2B, 0x17, 0x10, 0x00, 0xE8, 0x03, 0x00, 0x00]
@@ -316,7 +317,7 @@ mod tests {
             data: vec![0x0A, 0x06, 0x00, 0x00],
         }
         .set_data(&mut buf);
-        assert_eq!(frame_data_size, SDOFrame::FRAME_DATA_SIZE);
+        assert_eq!(frame_data_size, 8);
         assert_eq!(
             &buf[0..frame_data_size],
             &[0x23, 0x00, 0x12, 0x01, 0x0A, 0x06, 0x00, 0x00]
@@ -335,7 +336,7 @@ mod tests {
             data: vec![0x92, 0x01, 0x02, 0x00],
         }
         .set_data(&mut buf);
-        assert_eq!(frame_data_size, SDOFrame::FRAME_DATA_SIZE);
+        assert_eq!(frame_data_size, 8);
         assert_eq!(
             &buf[0..frame_data_size],
             &[0x43, 0x00, 0x10, 0x00, 0x92, 0x01, 0x02, 0x00]
@@ -354,7 +355,7 @@ mod tests {
             data: vec![0x02, 0x00, 0x01, 0x06], // SDO_ERR_ACCESS_RO
         }
         .set_data(&mut buf);
-        assert_eq!(frame_data_size, SDOFrame::FRAME_DATA_SIZE);
+        assert_eq!(frame_data_size, 8);
         assert_eq!(
             &buf[0..frame_data_size],
             &[0x80, 0x00, 0x10, 0x00, 0x02, 0x00, 0x01, 0x06]

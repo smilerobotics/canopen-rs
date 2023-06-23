@@ -1,6 +1,7 @@
-use socketcan::{BlockingCan, CanSocket, Socket};
+use socketcan::{BlockingCan, CanSocket, EmbeddedFrame, Socket};
 
 use canopen_rs::frame::{CANOpenFrame, NMTCommand, NMTNodeControlAddress};
+use canopen_rs::id::CommunicationObject;
 
 const INTERFACE_NAME: &str = "can0";
 const NODE_ID: u8 = 1;
@@ -15,10 +16,16 @@ fn main() {
         .into(),
     )
     .unwrap();
-    std::thread::sleep(std::time::Duration::from_millis(1000));
+
+    let cob: CommunicationObject = sock.receive().unwrap().id().try_into().unwrap();
+    println!("received communication object: {:?}", cob);
+
     sock.transmit(
         &CANOpenFrame::new_sdo_read_frame(NODE_ID.try_into().unwrap(), 0x1018, 2) // read `Product code`
             .into(),
     )
     .unwrap();
+
+    let cob: CommunicationObject = sock.receive().unwrap().id().try_into().unwrap();
+    println!("received communication object: {:?}", cob);
 }

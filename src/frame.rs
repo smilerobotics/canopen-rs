@@ -1,16 +1,18 @@
+use libc::CAN_MAX_DLEN;
 use socketcan::EmbeddedFrame;
 
 use crate::id::{CommunicationObject, NodeID};
 
 trait ToSocketCANFrame {
     fn communication_object(&self) -> CommunicationObject;
-    fn set_data(&self, buf: &mut [u8]) -> usize;
+    fn set_data(&self, data: &mut [u8]) -> usize;
 
     fn to_socketcan_frame(&self) -> socketcan::CanFrame {
-        let mut buf = [0u8; 8];
-        let data_size = self.set_data(&mut buf);
-        socketcan::CanFrame::new(self.communication_object(), &buf[0..data_size]).unwrap()
-        // TODO: define original error type and return `Result` type
+        let mut data = [0u8; CAN_MAX_DLEN];
+        let data_size = self.set_data(&mut data);
+        socketcan::CanFrame::new(self.communication_object(), &data[0..data_size]).unwrap()
+        // The `new` method could return `None` if the data length is too long.
+        // But its length is same as the limit.
     }
 }
 

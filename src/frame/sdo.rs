@@ -102,13 +102,13 @@ mod tests {
 
     #[test]
     fn test_sdo_read_frame() {
-        let frame = SDOFrame::new_sdo_read_frame(1, 0x1018, 2); // Product code
+        let frame = SDOFrame::new_sdo_read_frame(1.try_into().unwrap(), 0x1018, 2); // Product code
         assert_eq!(
             frame,
             SDOFrame {
                 direction: Direction::Rx,
                 ccs: ClientCommandSpecifier::InitiateUpload,
-                node_id: 1,
+                node_id: 1.try_into().unwrap(),
                 index: 0x1018,
                 sub_index: 2,
                 expedited: false,
@@ -120,13 +120,13 @@ mod tests {
 
     #[test]
     fn test_sdo_write_frame() {
-        let frame = SDOFrame::new_sdo_write_frame(1, 0x1402, 2, &[255]); // Transmission type RxPDO3
+        let frame = SDOFrame::new_sdo_write_frame(1.try_into().unwrap(), 0x1402, 2, &[255]); // Transmission type RxPDO3
         assert_eq!(
             frame,
             SDOFrame {
                 direction: Direction::Rx,
                 ccs: ClientCommandSpecifier::InitiateDownload,
-                node_id: 1,
+                node_id: 1.try_into().unwrap(),
                 index: 0x1402,
                 sub_index: 2,
                 expedited: true,
@@ -135,13 +135,18 @@ mod tests {
             }
         );
 
-        let frame = SDOFrame::new_sdo_write_frame(2, 0x1017, 0, &(1000u16.to_le_bytes())); // Producer heartbeat time
+        let frame = SDOFrame::new_sdo_write_frame(
+            2.try_into().unwrap(),
+            0x1017,
+            0,
+            &(1000u16.to_le_bytes()),
+        ); // Producer heartbeat time
         assert_eq!(
             frame,
             SDOFrame {
                 direction: Direction::Rx,
                 ccs: ClientCommandSpecifier::InitiateDownload,
-                node_id: 2,
+                node_id: 2.try_into().unwrap(),
                 index: 0x1017,
                 sub_index: 0,
                 expedited: true,
@@ -150,13 +155,18 @@ mod tests {
             }
         );
 
-        let frame = SDOFrame::new_sdo_write_frame(3, 0x1200, 1, &(0x060Au32.to_le_bytes())); // COB-ID SDO client to server
+        let frame = SDOFrame::new_sdo_write_frame(
+            3.try_into().unwrap(),
+            0x1200,
+            1,
+            &(0x060Au32.to_le_bytes()),
+        ); // COB-ID SDO client to server
         assert_eq!(
             frame,
             SDOFrame {
                 direction: Direction::Rx,
                 ccs: ClientCommandSpecifier::InitiateDownload,
-                node_id: 3,
+                node_id: 3.try_into().unwrap(),
                 index: 0x1200,
                 sub_index: 1,
                 expedited: true,
@@ -171,7 +181,7 @@ mod tests {
         let frame = SDOFrame {
             direction: Direction::Rx,
             ccs: ClientCommandSpecifier::InitiateUpload,
-            node_id: 1,
+            node_id: 1.try_into().unwrap(),
             // Product code
             index: 0x1018,
             sub_index: 2,
@@ -179,12 +189,15 @@ mod tests {
             size_specified: false,
             data: vec![],
         };
-        assert_eq!(frame.communication_object(), CommunicationObject::RxSDO(1));
+        assert_eq!(
+            frame.communication_object(),
+            CommunicationObject::RxSDO(1.try_into().unwrap())
+        );
 
         let frame = SDOFrame {
             direction: Direction::Rx,
             ccs: ClientCommandSpecifier::InitiateDownload,
-            node_id: 3,
+            node_id: 3.try_into().unwrap(),
             // COB-ID SDO client to server
             index: 0x1200,
             sub_index: 1,
@@ -192,12 +205,15 @@ mod tests {
             size_specified: true,
             data: vec![0x0A, 0x06, 0x00, 0x00],
         };
-        assert_eq!(frame.communication_object(), CommunicationObject::RxSDO(3));
+        assert_eq!(
+            frame.communication_object(),
+            CommunicationObject::RxSDO(3.try_into().unwrap())
+        );
 
         let frame = SDOFrame {
             direction: Direction::Tx,
             ccs: ClientCommandSpecifier::InitiateUpload,
-            node_id: 4,
+            node_id: 4.try_into().unwrap(),
             // Device type
             index: 0x1000,
             sub_index: 0,
@@ -205,12 +221,15 @@ mod tests {
             size_specified: true,
             data: vec![0x92, 0x01, 0x02, 0x00],
         };
-        assert_eq!(frame.communication_object(), CommunicationObject::TxSDO(4));
+        assert_eq!(
+            frame.communication_object(),
+            CommunicationObject::TxSDO(4.try_into().unwrap())
+        );
 
         let frame = SDOFrame {
             direction: Direction::Tx,
             ccs: ClientCommandSpecifier::AbortTransfer,
-            node_id: 5,
+            node_id: 5.try_into().unwrap(),
             // Device type
             index: 0x1000,
             sub_index: 0,
@@ -218,7 +237,10 @@ mod tests {
             size_specified: false,
             data: vec![0x02, 0x00, 0x01, 0x06], // SDO_ERR_ACCESS_RO
         };
-        assert_eq!(frame.communication_object(), CommunicationObject::TxSDO(5));
+        assert_eq!(
+            frame.communication_object(),
+            CommunicationObject::TxSDO(5.try_into().unwrap())
+        );
     }
 
     #[test]
@@ -228,7 +250,7 @@ mod tests {
         let frame_data_size = SDOFrame {
             direction: Direction::Rx,
             ccs: ClientCommandSpecifier::InitiateUpload,
-            node_id: 1,
+            node_id: 1.try_into().unwrap(),
             // Product code
             index: 0x1018,
             sub_index: 2,
@@ -247,7 +269,7 @@ mod tests {
         let frame_data_size = SDOFrame {
             direction: Direction::Rx,
             ccs: ClientCommandSpecifier::InitiateDownload,
-            node_id: 1,
+            node_id: 1.try_into().unwrap(),
             // Transmission type RxPDO3
             index: 0x1402,
             sub_index: 2,
@@ -266,7 +288,7 @@ mod tests {
         let frame_data_size = SDOFrame {
             direction: Direction::Rx,
             ccs: ClientCommandSpecifier::InitiateDownload,
-            node_id: 2,
+            node_id: 2.try_into().unwrap(),
             // Producer heartbeat time
             index: 0x1017,
             sub_index: 0,
@@ -285,7 +307,7 @@ mod tests {
         let frame_data_size = SDOFrame {
             direction: Direction::Rx,
             ccs: ClientCommandSpecifier::InitiateDownload,
-            node_id: 3,
+            node_id: 3.try_into().unwrap(),
             // COB-ID SDO client to server
             index: 0x1200,
             sub_index: 1,
@@ -304,7 +326,7 @@ mod tests {
         let frame_data_size = SDOFrame {
             direction: Direction::Tx,
             ccs: ClientCommandSpecifier::InitiateUpload,
-            node_id: 4,
+            node_id: 4.try_into().unwrap(),
             // Device type
             index: 0x1000,
             sub_index: 0,
@@ -323,7 +345,7 @@ mod tests {
         let frame_data_size = SDOFrame {
             direction: Direction::Tx,
             ccs: ClientCommandSpecifier::AbortTransfer,
-            node_id: 5,
+            node_id: 5.try_into().unwrap(),
             // Device type
             index: 0x1000,
             sub_index: 0,
@@ -341,14 +363,15 @@ mod tests {
 
     #[test]
     fn test_sdo_frame_to_socketcan_frame() {
-        let frame = SDOFrame::new_sdo_read_frame(1, 0x1018, 2).to_socketcan_frame(); // Product code
+        let frame =
+            SDOFrame::new_sdo_read_frame(1.try_into().unwrap(), 0x1018, 2).to_socketcan_frame(); // Product code
         assert_eq!(frame.raw_id(), 0x601);
         assert_eq!(
             frame.data(),
             &[0x40, 0x18, 0x10, 0x02, 0x00, 0x00, 0x00, 0x00]
         );
 
-        let frame = SDOFrame::new_sdo_write_frame(1, 0x1402, 2, &[255]) // Transmission type RxPDO3
+        let frame = SDOFrame::new_sdo_write_frame(1.try_into().unwrap(), 0x1402, 2, &[255]) // Transmission type RxPDO3
             .to_socketcan_frame();
         assert_eq!(frame.raw_id(), 0x601);
         assert_eq!(
@@ -356,16 +379,26 @@ mod tests {
             &[0x2F, 0x02, 0x14, 0x02, 0xFF, 0x00, 0x00, 0x00]
         );
 
-        let frame = SDOFrame::new_sdo_write_frame(2, 0x1017, 0, &(1000u16.to_le_bytes())) // Producer heartbeat time
-            .to_socketcan_frame();
+        let frame = SDOFrame::new_sdo_write_frame(
+            2.try_into().unwrap(),
+            0x1017,
+            0,
+            &(1000u16.to_le_bytes()),
+        ) // Producer heartbeat time
+        .to_socketcan_frame();
         assert_eq!(frame.raw_id(), 0x602);
         assert_eq!(
             frame.data(),
             &[0x2B, 0x17, 0x10, 0x00, 0xE8, 0x03, 0x00, 0x00]
         );
 
-        let frame = SDOFrame::new_sdo_write_frame(3, 0x1200, 1, &(0x060Au32.to_le_bytes())) // COB-ID SDO client to server
-            .to_socketcan_frame();
+        let frame = SDOFrame::new_sdo_write_frame(
+            3.try_into().unwrap(),
+            0x1200,
+            1,
+            &(0x060Au32.to_le_bytes()),
+        ) // COB-ID SDO client to server
+        .to_socketcan_frame();
         assert_eq!(frame.raw_id(), 0x603);
         assert_eq!(
             frame.data(),
@@ -375,7 +408,7 @@ mod tests {
         let frame = SDOFrame {
             direction: Direction::Tx,
             ccs: ClientCommandSpecifier::InitiateUpload,
-            node_id: 4,
+            node_id: 4.try_into().unwrap(),
             // Device type
             index: 0x1000,
             sub_index: 0,
@@ -393,7 +426,7 @@ mod tests {
         let frame = SDOFrame {
             direction: Direction::Tx,
             ccs: ClientCommandSpecifier::AbortTransfer,
-            node_id: 5,
+            node_id: 5.try_into().unwrap(),
             // Device type
             index: 0x1000,
             sub_index: 0,

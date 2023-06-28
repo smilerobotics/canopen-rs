@@ -22,9 +22,8 @@ fn main() {
 
     let frame = CANOpenFrame::new_sdo_write_frame(node_id, 0x6060, 0, &[3]);
     sock.transmit(&frame.into()).unwrap();
-    let received = sock.receive().unwrap();
-    let cob: CommunicationObject = received.id().try_into().unwrap();
-    println!("received communication object: {:?}", cob);
+    let frame: CANOpenFrame = sock.receive().unwrap().try_into().unwrap();
+    println!("received: {:?}", frame);
 
     let frame = CANOpenFrame::new_nmt_node_control_frame(
         NMTCommand::Operational,
@@ -36,30 +35,26 @@ fn main() {
     let frame =
         CANOpenFrame::new_sdo_write_frame(node_id, 0x6040, 0, &0b0001_0000_0110u16.to_le_bytes());
     sock.transmit(&frame.into()).unwrap();
-    let received = sock.receive().unwrap();
-    let cob: CommunicationObject = received.id().try_into().unwrap();
-    println!("received communication object: {:?}", cob);
+    let frame: CANOpenFrame = sock.receive().unwrap().try_into().unwrap();
+    println!("received: {:?}", frame);
 
     let frame =
         CANOpenFrame::new_sdo_write_frame(node_id, 0x6040, 0, &0b0001_0000_0111u16.to_le_bytes());
     sock.transmit(&frame.into()).unwrap();
-    let received = sock.receive().unwrap();
-    let cob: CommunicationObject = received.id().try_into().unwrap();
-    println!("received communication object: {:?}", cob);
+    let frame: CANOpenFrame = sock.receive().unwrap().try_into().unwrap();
+    println!("received: {:?}", frame);
 
     let frame =
         CANOpenFrame::new_sdo_write_frame(node_id, 0x6040, 0, &0b0001_0000_1111u16.to_le_bytes());
     sock.transmit(&frame.into()).unwrap();
-    let received = sock.receive().unwrap();
-    let cob: CommunicationObject = received.id().try_into().unwrap();
-    println!("received communication object: {:?}", cob);
+    let frame: CANOpenFrame = sock.receive().unwrap().try_into().unwrap();
+    println!("received: {:?}", frame);
 
     let frame =
         CANOpenFrame::new_sdo_write_frame(node_id, 0x6040, 0, &0b0000_0000_1111u16.to_le_bytes());
     sock.transmit(&frame.into()).unwrap();
-    let received = sock.receive().unwrap();
-    let cob: CommunicationObject = received.id().try_into().unwrap();
-    println!("received communication object: {:?}", cob);
+    let frame: CANOpenFrame = sock.receive().unwrap().try_into().unwrap();
+    println!("received: {:?}", frame);
 
     let mut str_velocity = String::new();
     loop {
@@ -70,9 +65,8 @@ fn main() {
             let frame =
                 CANOpenFrame::new_sdo_write_frame(node_id, 0x60FF, 0, &velocity.to_le_bytes());
             sock.transmit(&frame.into()).unwrap();
-            let received = sock.receive().unwrap();
-            let cob: CommunicationObject = received.id().try_into().unwrap();
-            println!("received communication object: {:?}", cob);
+            let frame: CANOpenFrame = sock.receive().unwrap().try_into().unwrap();
+            println!("received: {:?}", frame);
 
             let frame = CANOpenFrame::new_sdo_write_frame(
                 node_id,
@@ -81,17 +75,14 @@ fn main() {
                 &0b0000_0000_1111u16.to_le_bytes(),
             );
             sock.transmit(&frame.into()).unwrap();
-            let received = sock.receive().unwrap();
-            let cob: CommunicationObject = received.id().try_into().unwrap();
-            println!("received communication object: {:?}", cob);
+            let frame: CANOpenFrame = sock.receive().unwrap().try_into().unwrap();
+            println!("received: {:?}", frame);
         } else {
             let frame =
                 CANOpenFrame::new_sdo_write_frame(node_id, 0x6040, 0, &0x00u16.to_le_bytes());
             sock.transmit(&frame.into()).unwrap();
-            let received = sock.receive().unwrap();
-            let cob: CommunicationObject = received.id().try_into().unwrap();
-            println!("received communication object: {:?}", cob);
-
+            let frame: CANOpenFrame = sock.receive().unwrap().try_into().unwrap();
+            println!("received: {:?}", frame);
             break;
         }
         str_velocity.clear();

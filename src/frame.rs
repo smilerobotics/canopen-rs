@@ -21,7 +21,7 @@ mod nmt_node_control;
 pub use nmt_node_control::{NMTCommand, NMTNodeControlAddress, NMTNodeControlFrame};
 
 mod sdo;
-pub use sdo::SDOFrame;
+pub use sdo::{ClientCommandSpecifier, Direction, SDOFrame};
 
 #[derive(Debug, PartialEq)]
 pub enum CANOpenFrame {
@@ -63,6 +63,22 @@ impl TryFrom<socketcan::CanFrame> for CANOpenFrame {
                 match cob {
                     CommunicationObject::NMTNodeControl => {
                         Ok(NMTNodeControlFrame::from_bytes(frame.data())?.into())
+                    }
+                    CommunicationObject::TxSDO(node_id) => {
+                        Ok(SDOFrame::from_direction_node_id_bytes(
+                            Direction::Tx,
+                            node_id,
+                            frame.data(),
+                        )?
+                        .into())
+                    }
+                    CommunicationObject::RxSDO(node_id) => {
+                        Ok(SDOFrame::from_direction_node_id_bytes(
+                            Direction::Rx,
+                            node_id,
+                            frame.data(),
+                        )?
+                        .into())
                     }
                     _ => Err(Error::NotImplemented),
                 }
@@ -161,5 +177,123 @@ mod tests {
                 .unwrap()
                 .try_into();
         assert_eq!(frame, Err(Error::InvalidNodeId(255)));
+    }
+
+    #[test]
+    fn test_socketcan_frame_to_sdo_frame() {
+        let frame: Result<CANOpenFrame> = socketcan::CanFrame::new(
+            socketcan::StandardId::new(0x601).unwrap(),
+            &[0x40, 0x18, 0x10, 0x02, 0x00, 0x00, 0x00, 0x00],
+        )
+        .unwrap()
+        .try_into();
+        assert_eq!(
+            frame,
+            Ok(CANOpenFrame::SDOFrame(SDOFrame {
+                direction: Direction::Rx,
+                node_id: 1.try_into().unwrap(),
+                ccs: ClientCommandSpecifier::InitiateUpload,
+                index: 0x1018,
+                sub_index: 2,
+                size: None,
+                expedited: false,
+                data: vec![],
+            }))
+        );
+        let frame: Result<CANOpenFrame> = socketcan::CanFrame::new(
+            socketcan::StandardId::new(0x601).unwrap(),
+            &[0x2F, 0x02, 0x14, 0x02, 0xFF, 0x00, 0x00, 0x00],
+        )
+        .unwrap()
+        .try_into();
+        assert_eq!(
+            frame,
+            Ok(CANOpenFrame::SDOFrame(SDOFrame {
+                direction: Direction::Rx,
+                node_id: 1.try_into().unwrap(),
+                ccs: ClientCommandSpecifier::InitiateDownload,
+                index: 0x1402,
+                sub_index: 2,
+                size: Some(1),
+                expedited: true,
+                data: vec![0xFF],
+            }))
+        );
+        let frame: Result<CANOpenFrame> = socketcan::CanFrame::new(
+            socketcan::StandardId::new(0x602).unwrap(),
+            &[0x2B, 0x17, 0x10, 0x00, 0xE8, 0x03, 0x00, 0x00],
+        )
+        .unwrap()
+        .try_into();
+        assert_eq!(
+            frame,
+            Ok(CANOpenFrame::SDOFrame(SDOFrame {
+                direction: Direction::Rx,
+                node_id: 2.try_into().unwrap(),
+                ccs: ClientCommandSpecifier::InitiateDownload,
+                index: 0x1017,
+                sub_index: 0,
+                size: Some(2),
+                expedited: true,
+                data: vec![0xE8, 0x03],
+            }))
+        );
+        let frame: Result<CANOpenFrame> = socketcan::CanFrame::new(
+            socketcan::StandardId::new(0x603).unwrap(),
+            &[0x23, 0x00, 0x12, 0x01, 0x0A, 0x06, 0x00, 0x00],
+        )
+        .unwrap()
+        .try_into();
+        assert_eq!(
+            frame,
+            Ok(CANOpenFrame::SDOFrame(SDOFrame {
+                direction: Direction::Rx,
+                node_id: 3.try_into().unwrap(),
+                ccs: ClientCommandSpecifier::InitiateDownload,
+                index: 0x1200,
+                sub_index: 1,
+                size: Some(4),
+                expedited: true,
+                data: vec![0x0A, 0x06, 0x00, 0x00],
+            }))
+        );
+        let frame: Result<CANOpenFrame> = socketcan::CanFrame::new(
+            socketcan::StandardId::new(0x584).unwrap(),
+            &[0x43, 0x00, 0x10, 0x00, 0x92, 0x01, 0x02, 0x00],
+        )
+        .unwrap()
+        .try_into();
+        assert_eq!(
+            frame,
+            Ok(CANOpenFrame::SDOFrame(SDOFrame {
+                direction: Direction::Tx,
+                node_id: 4.try_into().unwrap(),
+                ccs: ClientCommandSpecifier::InitiateUpload,
+                index: 0x1000,
+                sub_index: 0,
+                size: Some(4),
+                expedited: true,
+                data: vec![0x92, 0x01, 0x02, 0x00],
+            }))
+        );
+        let frame: Result<CANOpenFrame> = socketcan::CanFrame::new(
+            socketcan::StandardId::new(0x585).unwrap(),
+            &[0x80, 0x00, 0x10, 0x00, 0x02, 0x00, 0x01, 0x06],
+        )
+        .unwrap()
+        .try_into();
+        assert_eq!(
+            frame,
+            Ok(CANOpenFrame::SDOFrame(SDOFrame {
+                direction: Direction::Tx,
+                node_id: 5.try_into().unwrap(),
+                ccs: ClientCommandSpecifier::AbortTransfer,
+                index: 0x1000,
+                sub_index: 0,
+                size: None,
+                expedited: false,
+                data: vec![0x02, 0x00, 0x01, 0x06],
+            }))
+        );
     }
 }

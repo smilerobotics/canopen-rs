@@ -10,6 +10,8 @@ pub enum Error {
     InvalidNMTCommand(u8),
     #[error("Invalid data length ({} bytes for {})", .length, .data_type)]
     InvalidDataLength { length: usize, data_type: String },
+    #[error("Invalid client command specifier ({})", .0)]
+    InvalidClientCommandSpecifier(u8),
     #[error("CAN-FD is not supported")]
     CanFdNotSupported,
     #[error("Not implemented")]

@@ -31,8 +31,8 @@ pub struct SDOFrame {
     ccs: ClientCommandSpecifier,
     index: u16,
     sub_index: u8,
+    size: Option<usize>,
     expedited: bool,
-    size_specified: bool,
     data: std::vec::Vec<u8>,
 }
 
@@ -47,8 +47,8 @@ impl SDOFrame {
             ccs: ClientCommandSpecifier::InitiateUpload,
             index: index,
             sub_index: sub_index,
+            size: None,
             expedited: false,
-            size_specified: false,
             data: std::vec::Vec::new(),
         }
     }
@@ -80,12 +80,11 @@ impl ToSocketCANFrame for SDOFrame {
         assert!(self.data.len() <= Self::DATA_CONTENT_SIZE);
 
         buf[0] = ((self.ccs as u8) << 5)
-            + match self.size_specified {
-                true => (((4 - self.data.len()) as u8) << 2) & 0b1100,
-                false => 0,
-            }
+            + self
+                .size
+                .map_or(0, |size| (((4 - size) as u8) << 2) & 0b1100)
             + ((self.expedited as u8) << 1)
-            + (self.size_specified as u8);
+            + (self.size.is_some() as u8);
         buf[1..3].copy_from_slice(&self.index.to_le_bytes());
         buf[3] = self.sub_index;
         buf[4..4 + self.data.len()].copy_from_slice(self.data.as_ref());
@@ -112,8 +111,8 @@ mod tests {
                 node_id: 1.try_into().unwrap(),
                 index: 0x1018,
                 sub_index: 2,
+                size: None,
                 expedited: false,
-                size_specified: false,
                 data: vec![],
             }
         )
@@ -130,8 +129,8 @@ mod tests {
                 node_id: 1.try_into().unwrap(),
                 index: 0x1402,
                 sub_index: 2,
+                size: Some(1),
                 expedited: true,
-                size_specified: true,
                 data: vec![0xFF],
             }
         );
@@ -150,8 +149,8 @@ mod tests {
                 node_id: 2.try_into().unwrap(),
                 index: 0x1017,
                 sub_index: 0,
+                size: Some(2),
                 expedited: true,
-                size_specified: true,
                 data: vec![0xE8, 0x03],
             }
         );
@@ -170,8 +169,8 @@ mod tests {
                 node_id: 3.try_into().unwrap(),
                 index: 0x1200,
                 sub_index: 1,
+                size: Some(4),
                 expedited: true,
-                size_specified: true,
                 data: vec![0x0A, 0x06, 0x00, 0x00],
             }
         )
@@ -186,8 +185,8 @@ mod tests {
             // Product code
             index: 0x1018,
             sub_index: 2,
+            size: None,
             expedited: false,
-            size_specified: false,
             data: vec![],
         };
         assert_eq!(
@@ -202,8 +201,8 @@ mod tests {
             // COB-ID SDO client to server
             index: 0x1200,
             sub_index: 1,
+            size: Some(4),
             expedited: true,
-            size_specified: true,
             data: vec![0x0A, 0x06, 0x00, 0x00],
         };
         assert_eq!(
@@ -218,8 +217,8 @@ mod tests {
             // Device type
             index: 0x1000,
             sub_index: 0,
+            size: Some(4),
             expedited: true,
-            size_specified: true,
             data: vec![0x92, 0x01, 0x02, 0x00],
         };
         assert_eq!(
@@ -234,8 +233,8 @@ mod tests {
             // Device type
             index: 0x1000,
             sub_index: 0,
+            size: Some(4),
             expedited: false,
-            size_specified: false,
             data: vec![0x02, 0x00, 0x01, 0x06], // SDO_ERR_ACCESS_RO
         };
         assert_eq!(
@@ -255,8 +254,8 @@ mod tests {
             // Product code
             index: 0x1018,
             sub_index: 2,
+            size: None,
             expedited: false,
-            size_specified: false,
             data: vec![],
         }
         .set_data(&mut buf);
@@ -274,8 +273,8 @@ mod tests {
             // Transmission type RxPDO3
             index: 0x1402,
             sub_index: 2,
+            size: Some(1),
             expedited: true,
-            size_specified: true,
             data: vec![0xFF],
         }
         .set_data(&mut buf);
@@ -293,8 +292,8 @@ mod tests {
             // Producer heartbeat time
             index: 0x1017,
             sub_index: 0,
+            size: Some(2),
             expedited: true,
-            size_specified: true,
             data: vec![0xE8, 0x03],
         }
         .set_data(&mut buf);
@@ -312,8 +311,8 @@ mod tests {
             // COB-ID SDO client to server
             index: 0x1200,
             sub_index: 1,
+            size: Some(4),
             expedited: true,
-            size_specified: true,
             data: vec![0x0A, 0x06, 0x00, 0x00],
         }
         .set_data(&mut buf);
@@ -331,8 +330,8 @@ mod tests {
             // Device type
             index: 0x1000,
             sub_index: 0,
+            size: Some(4),
             expedited: true,
-            size_specified: true,
             data: vec![0x92, 0x01, 0x02, 0x00],
         }
         .set_data(&mut buf);
@@ -350,8 +349,8 @@ mod tests {
             // Device type
             index: 0x1000,
             sub_index: 0,
+            size: None,
             expedited: false,
-            size_specified: false,
             data: vec![0x02, 0x00, 0x01, 0x06], // SDO_ERR_ACCESS_RO
         }
         .set_data(&mut buf);
@@ -413,15 +412,15 @@ mod tests {
             // Device type
             index: 0x1000,
             sub_index: 0,
-            expedited: false,
-            size_specified: false,
+            size: Some(4),
+            expedited: true,
             data: vec![0x92, 0x01, 0x02, 0x00],
         }
         .to_socketcan_frame();
         assert_eq!(frame.raw_id(), 0x584);
         assert_eq!(
             frame.data(),
-            &[0x40, 0x00, 0x10, 0x00, 0x92, 0x01, 0x02, 0x00]
+            &[0x43, 0x00, 0x10, 0x00, 0x92, 0x01, 0x02, 0x00]
         );
 
         let frame = SDOFrame {
@@ -431,8 +430,8 @@ mod tests {
             // Device type
             index: 0x1000,
             sub_index: 0,
+            size: None,
             expedited: false,
-            size_specified: false,
             data: vec![0x02, 0x00, 0x01, 0x06], // SDO_ERR_ACCESS_RO
         }
         .to_socketcan_frame();

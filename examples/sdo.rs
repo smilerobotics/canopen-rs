@@ -26,6 +26,6 @@ fn main() {
     )
     .unwrap();
 
-    let cob: CommunicationObject = sock.receive().unwrap().id().try_into().unwrap();
-    println!("received communication object: {:?}", cob);
+    let frame: CANOpenFrame = sock.receive().unwrap().try_into().unwrap();
+    println!("received: {:?}", frame);
 }

@@ -1,39 +1,49 @@
-use crate::frame::ToSocketCANFrame;
+use crate::error::{Error, Result};
+use crate::frame::{CANOpenFrame, ToSocketCANFrame};
 use crate::id::{CommunicationObject, NodeID};
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Direction {
-    #[allow(dead_code)]
     Tx,
     Rx,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum ClientCommandSpecifier {
-    #[allow(dead_code)]
     SegmentDownload = 0,
     InitiateDownload = 1,
     InitiateUpload = 2,
-    #[allow(dead_code)]
     SegmentUpload = 3,
-    #[allow(dead_code)]
     AbortTransfer = 4,
-    #[allow(dead_code)]
     BlockUpload = 5,
-    #[allow(dead_code)]
     BlockDownload = 6,
+}
+
+impl ClientCommandSpecifier {
+    fn from_num(value: u8) -> Result<Self> {
+        match value {
+            0 => Ok(Self::SegmentDownload),
+            1 => Ok(Self::InitiateDownload),
+            2 => Ok(Self::InitiateUpload),
+            3 => Ok(Self::SegmentUpload),
+            4 => Ok(Self::AbortTransfer),
+            5 => Ok(Self::BlockUpload),
+            6 => Ok(Self::BlockDownload),
+            _ => Err(Error::InvalidClientCommandSpecifier(value)),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
 pub struct SDOFrame {
-    direction: Direction,
-    node_id: NodeID,
-    ccs: ClientCommandSpecifier,
-    index: u16,
-    sub_index: u8,
-    size: Option<usize>,
-    expedited: bool,
-    data: std::vec::Vec<u8>,
+    pub(super) direction: Direction,
+    pub(super) node_id: NodeID,
+    pub(super) ccs: ClientCommandSpecifier,
+    pub(super) index: u16,
+    pub(super) sub_index: u8,
+    pub(super) size: Option<usize>,
+    pub(super) expedited: bool,
+    pub(super) data: std::vec::Vec<u8>,
 }
 
 impl SDOFrame {
@@ -60,10 +70,51 @@ impl SDOFrame {
             ccs: ClientCommandSpecifier::InitiateDownload,
             index: index,
             sub_index: sub_index,
+            size: Some(data.len()),
             expedited: true,
-            size_specified: true,
             data: data.into(),
         }
+    }
+
+    pub(super) fn from_direction_node_id_bytes(
+        direction: Direction,
+        node_id: NodeID,
+        bytes: &[u8],
+    ) -> Result<Self> {
+        let ccs = ClientCommandSpecifier::from_num(bytes[0] >> 5)?;
+        let expedited: bool = (bytes[0] & 0b0010) != 0;
+        let size = match bytes[0] & 0b0001 {
+            0 => None,
+            _ => Some((4 - ((bytes[0] & 0b1100) >> 2)) as usize),
+        };
+        let bytes_len_to_be = 4 + match ccs {
+            ClientCommandSpecifier::AbortTransfer => 4,
+            _ => size.unwrap_or(0),
+        };
+        if bytes.len() < bytes_len_to_be {
+            return Err(Error::InvalidDataLength {
+                length: bytes.len(),
+                data_type: "SDOFrame".to_owned(),
+            });
+        }
+        let index: u16 = u16::from_le_bytes(bytes[1..3].try_into().unwrap());
+        let sub_index: u8 = bytes[3];
+        Ok(Self {
+            direction,
+            node_id,
+            ccs,
+            index,
+            sub_index,
+            size,
+            expedited,
+            data: bytes[4..bytes_len_to_be].to_owned(),
+        })
+    }
+}
+
+impl From<SDOFrame> for CANOpenFrame {
+    fn from(frame: SDOFrame) -> Self {
+        CANOpenFrame::SDOFrame(frame)
     }
 }
 
@@ -99,6 +150,50 @@ mod tests {
     use socketcan::{EmbeddedFrame, Frame};
 
     use super::*;
+
+    #[test]
+    fn test_ccs_from_num() {
+        assert_eq!(
+            ClientCommandSpecifier::from_num(0),
+            Ok(ClientCommandSpecifier::SegmentDownload)
+        );
+        assert_eq!(
+            ClientCommandSpecifier::from_num(1),
+            Ok(ClientCommandSpecifier::InitiateDownload)
+        );
+        assert_eq!(
+            ClientCommandSpecifier::from_num(2),
+            Ok(ClientCommandSpecifier::InitiateUpload)
+        );
+        assert_eq!(
+            ClientCommandSpecifier::from_num(3),
+            Ok(ClientCommandSpecifier::SegmentUpload)
+        );
+        assert_eq!(
+            ClientCommandSpecifier::from_num(4),
+            Ok(ClientCommandSpecifier::AbortTransfer)
+        );
+        assert_eq!(
+            ClientCommandSpecifier::from_num(5),
+            Ok(ClientCommandSpecifier::BlockUpload)
+        );
+        assert_eq!(
+            ClientCommandSpecifier::from_num(6),
+            Ok(ClientCommandSpecifier::BlockDownload)
+        );
+        assert_eq!(
+            ClientCommandSpecifier::from_num(7),
+            Err(Error::InvalidClientCommandSpecifier(7))
+        );
+        assert_eq!(
+            ClientCommandSpecifier::from_num(8),
+            Err(Error::InvalidClientCommandSpecifier(8))
+        );
+        assert_eq!(
+            ClientCommandSpecifier::from_num(255),
+            Err(Error::InvalidClientCommandSpecifier(255))
+        );
+    }
 
     #[test]
     fn test_sdo_read_frame() {
@@ -174,6 +269,112 @@ mod tests {
                 data: vec![0x0A, 0x06, 0x00, 0x00],
             }
         )
+    }
+
+    #[test]
+    fn test_from_direction_node_id_bytes() {
+        assert_eq!(
+            SDOFrame::from_direction_node_id_bytes(
+                Direction::Rx,
+                1.try_into().unwrap(),
+                &[0x40, 0x18, 0x10, 0x02, 0x00, 0x00, 0x00, 0x00],
+            ),
+            Ok(SDOFrame {
+                direction: Direction::Rx,
+                ccs: ClientCommandSpecifier::InitiateUpload,
+                node_id: 1.try_into().unwrap(),
+                index: 0x1018,
+                sub_index: 2,
+                size: None,
+                expedited: false,
+                data: vec![],
+            })
+        );
+        assert_eq!(
+            SDOFrame::from_direction_node_id_bytes(
+                Direction::Rx,
+                1.try_into().unwrap(),
+                &[0x2F, 0x02, 0x14, 0x02, 0xFF, 0x00, 0x00, 0x00],
+            ),
+            Ok(SDOFrame {
+                direction: Direction::Rx,
+                ccs: ClientCommandSpecifier::InitiateDownload,
+                node_id: 1.try_into().unwrap(),
+                index: 0x1402,
+                sub_index: 2,
+                size: Some(1),
+                expedited: true,
+                data: vec![0xFF],
+            })
+        );
+        assert_eq!(
+            SDOFrame::from_direction_node_id_bytes(
+                Direction::Rx,
+                2.try_into().unwrap(),
+                &[0x2B, 0x17, 0x10, 0x00, 0xE8, 0x03, 0x00, 0x00],
+            ),
+            Ok(SDOFrame {
+                direction: Direction::Rx,
+                ccs: ClientCommandSpecifier::InitiateDownload,
+                node_id: 2.try_into().unwrap(),
+                index: 0x1017,
+                sub_index: 0,
+                size: Some(2),
+                expedited: true,
+                data: vec![0xE8, 0x03],
+            })
+        );
+        assert_eq!(
+            SDOFrame::from_direction_node_id_bytes(
+                Direction::Rx,
+                3.try_into().unwrap(),
+                &[0x23, 0x00, 0x12, 0x01, 0x0A, 0x06, 0x00, 0x00],
+            ),
+            Ok(SDOFrame {
+                direction: Direction::Rx,
+                ccs: ClientCommandSpecifier::InitiateDownload,
+                node_id: 3.try_into().unwrap(),
+                index: 0x1200,
+                sub_index: 1,
+                size: Some(4),
+                expedited: true,
+                data: vec![0x0A, 0x06, 0x00, 0x00],
+            })
+        );
+        assert_eq!(
+            SDOFrame::from_direction_node_id_bytes(
+                Direction::Tx,
+                4.try_into().unwrap(),
+                &[0x43, 0x00, 0x10, 0x00, 0x92, 0x01, 0x02, 0x00],
+            ),
+            Ok(SDOFrame {
+                direction: Direction::Tx,
+                ccs: ClientCommandSpecifier::InitiateUpload,
+                node_id: 4.try_into().unwrap(),
+                index: 0x1000,
+                sub_index: 0,
+                size: Some(4),
+                expedited: true,
+                data: vec![0x92, 0x01, 0x02, 0x00],
+            })
+        );
+        assert_eq!(
+            SDOFrame::from_direction_node_id_bytes(
+                Direction::Tx,
+                5.try_into().unwrap(),
+                &[0x80, 0x00, 0x10, 0x00, 0x02, 0x00, 0x01, 0x06],
+            ),
+            Ok(SDOFrame {
+                direction: Direction::Tx,
+                ccs: ClientCommandSpecifier::AbortTransfer,
+                node_id: 5.try_into().unwrap(),
+                index: 0x1000,
+                sub_index: 0,
+                size: None,
+                expedited: false,
+                data: vec![0x02, 0x00, 0x01, 0x06],
+            })
+        );
     }
 
     #[test]

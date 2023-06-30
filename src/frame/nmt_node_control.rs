@@ -52,8 +52,8 @@ impl NmtNodeControlAddress {
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct NmtNodeControlFrame {
-    command: NmtCommand,
-    address: NmtNodeControlAddress,
+    pub command: NmtCommand,
+    pub address: NmtNodeControlAddress,
 }
 
 impl NmtNodeControlFrame {

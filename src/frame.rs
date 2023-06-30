@@ -23,6 +23,9 @@ pub use nmt_node_control::{NmtCommand, NmtNodeControlAddress, NmtNodeControlFram
 mod sync;
 pub use sync::SyncFrame;
 
+mod emergency;
+pub use emergency::EmergencyFrame;
+
 mod sdo;
 pub use sdo::{ClientCommandSpecifier, Direction, SdoFrame};
 
@@ -33,6 +36,7 @@ pub use nmt_node_monitoring::{NmtNodeMonitoringFrame, NmtState};
 pub enum CanOpenFrame {
     NmtNodeControlFrame(NmtNodeControlFrame),
     SyncFrame(SyncFrame),
+    EmergencyFrame(EmergencyFrame),
     SdoFrame(SdoFrame),
     NmtNodeMonitoringFrame(NmtNodeMonitoringFrame),
 }
@@ -58,6 +62,7 @@ impl From<CanOpenFrame> for socketcan::CanFrame {
         match frame {
             CanOpenFrame::NmtNodeControlFrame(frame) => frame.to_socketcan_frame(),
             CanOpenFrame::SyncFrame(frame) => frame.to_socketcan_frame(),
+            CanOpenFrame::EmergencyFrame(frame) => frame.to_socketcan_frame(),
             CanOpenFrame::SdoFrame(frame) => frame.to_socketcan_frame(),
             CanOpenFrame::NmtNodeMonitoringFrame(frame) => frame.to_socketcan_frame(),
         }
@@ -75,6 +80,9 @@ impl TryFrom<socketcan::CanFrame> for CanOpenFrame {
                         Ok(NmtNodeControlFrame::from_bytes(frame.data())?.into())
                     }
                     CommunicationObject::Sync => Ok(SyncFrame.into()),
+                    CommunicationObject::Emergency(node_id) => {
+                        Ok(EmergencyFrame::from_node_id_bytes(node_id, frame.data())?.into())
+                    }
                     CommunicationObject::TxSdo(node_id) => {
                         Ok(SdoFrame::from_direction_node_id_bytes(
                             Direction::Tx,
@@ -200,6 +208,62 @@ mod tests {
                 .unwrap()
                 .try_into();
         assert_eq!(frame, Ok(CanOpenFrame::SyncFrame(SyncFrame)));
+    }
+
+    #[test]
+    fn test_socketcan_frame_to_emergyncy_frame() {
+        let frame: Result<CanOpenFrame> = socketcan::CanFrame::new(
+            socketcan::StandardId::new(0x081).unwrap(),
+            &[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+        )
+        .unwrap()
+        .try_into();
+        assert_eq!(
+            frame,
+            Ok(CanOpenFrame::EmergencyFrame(EmergencyFrame {
+                node_id: 1.try_into().unwrap(),
+                error_code: 0x0000,
+                error_register: 0x00
+            }))
+        );
+
+        let frame: Result<CanOpenFrame> = socketcan::CanFrame::new(
+            socketcan::StandardId::new(0x082).unwrap(),
+            &[0x00, 0x10, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00],
+        )
+        .unwrap()
+        .try_into();
+        assert_eq!(
+            frame,
+            Ok(CanOpenFrame::EmergencyFrame(EmergencyFrame {
+                node_id: 2.try_into().unwrap(),
+                error_code: 0x1000,
+                error_register: 0x01
+            }))
+        );
+
+        let frame: Result<CanOpenFrame> = socketcan::CanFrame::new(
+            socketcan::StandardId::new(0x0FF).unwrap(),
+            &[0x34, 0x12, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00],
+        )
+        .unwrap()
+        .try_into();
+        assert_eq!(
+            frame,
+            Ok(CanOpenFrame::EmergencyFrame(EmergencyFrame {
+                node_id: 127.try_into().unwrap(),
+                error_code: 0x1234,
+                error_register: 0x56
+            }))
+        );
+
+        let frame: Result<CanOpenFrame> = socketcan::CanFrame::new(
+            socketcan::StandardId::new(0x081).unwrap(),
+            &[0x00, 0x00, 0x00],
+        )
+        .unwrap()
+        .try_into();
+        assert!(frame.is_err());
     }
 
     #[test]

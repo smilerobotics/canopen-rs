@@ -111,10 +111,10 @@ mod tests {
                 .try_into();
         assert_eq!(
             frame,
-            Ok(CanOpenFrame::NmtNodeControlFrame(NmtNodeControlFrame::new(
-                NmtCommand::Operational,
-                NmtNodeControlAddress::AllNodes
-            )))
+            Ok(CanOpenFrame::NmtNodeControlFrame(NmtNodeControlFrame {
+                command: NmtCommand::Operational,
+                address: NmtNodeControlAddress::AllNodes
+            }))
         );
         let frame: Result<CanOpenFrame> =
             socketcan::CanFrame::new(socketcan::StandardId::new(0x000).unwrap(), &[0x02, 0x01])
@@ -122,10 +122,10 @@ mod tests {
                 .try_into();
         assert_eq!(
             frame,
-            Ok(CanOpenFrame::NmtNodeControlFrame(NmtNodeControlFrame::new(
-                NmtCommand::Stopped,
-                NmtNodeControlAddress::Node(1.try_into().unwrap())
-            )))
+            Ok(CanOpenFrame::NmtNodeControlFrame(NmtNodeControlFrame {
+                command: NmtCommand::Stopped,
+                address: NmtNodeControlAddress::Node(1.try_into().unwrap())
+            }))
         );
         let frame: Result<CanOpenFrame> =
             socketcan::CanFrame::new(socketcan::StandardId::new(0x000).unwrap(), &[0x80, 0x02])
@@ -133,10 +133,10 @@ mod tests {
                 .try_into();
         assert_eq!(
             frame,
-            Ok(CanOpenFrame::NmtNodeControlFrame(NmtNodeControlFrame::new(
-                NmtCommand::PreOperational,
-                NmtNodeControlAddress::Node(2.try_into().unwrap())
-            )))
+            Ok(CanOpenFrame::NmtNodeControlFrame(NmtNodeControlFrame {
+                command: NmtCommand::PreOperational,
+                address: NmtNodeControlAddress::Node(2.try_into().unwrap())
+            }))
         );
         let frame: Result<CanOpenFrame> =
             socketcan::CanFrame::new(socketcan::StandardId::new(0x000).unwrap(), &[0x81, 0x03])
@@ -144,10 +144,10 @@ mod tests {
                 .try_into();
         assert_eq!(
             frame,
-            Ok(CanOpenFrame::NmtNodeControlFrame(NmtNodeControlFrame::new(
-                NmtCommand::ResetNode,
-                NmtNodeControlAddress::Node(3.try_into().unwrap())
-            )))
+            Ok(CanOpenFrame::NmtNodeControlFrame(NmtNodeControlFrame {
+                command: NmtCommand::ResetNode,
+                address: NmtNodeControlAddress::Node(3.try_into().unwrap())
+            }))
         );
         let frame: Result<CanOpenFrame> =
             socketcan::CanFrame::new(socketcan::StandardId::new(0x000).unwrap(), &[0x82, 0x7F])
@@ -155,10 +155,10 @@ mod tests {
                 .try_into();
         assert_eq!(
             frame,
-            Ok(CanOpenFrame::NmtNodeControlFrame(NmtNodeControlFrame::new(
-                NmtCommand::ResetCommunication,
-                NmtNodeControlAddress::Node(127.try_into().unwrap())
-            )))
+            Ok(CanOpenFrame::NmtNodeControlFrame(NmtNodeControlFrame {
+                command: NmtCommand::ResetCommunication,
+                address: NmtNodeControlAddress::Node(127.try_into().unwrap())
+            }))
         );
         let frame: Result<CanOpenFrame> =
             socketcan::CanFrame::new(socketcan::StandardId::new(0x000).unwrap(), &[0x00, 0x00])

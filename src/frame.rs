@@ -20,6 +20,9 @@ trait ToSocketCanFrame {
 mod nmt_node_control;
 pub use nmt_node_control::{NmtCommand, NmtNodeControlAddress, NmtNodeControlFrame};
 
+mod sync;
+pub use sync::SyncFrame;
+
 mod sdo;
 pub use sdo::{ClientCommandSpecifier, Direction, SdoFrame};
 
@@ -29,6 +32,7 @@ pub use nmt_node_monitoring::{NmtNodeMonitoringFrame, NmtState};
 #[derive(Debug, PartialEq)]
 pub enum CanOpenFrame {
     NmtNodeControlFrame(NmtNodeControlFrame),
+    SyncFrame(SyncFrame),
     SdoFrame(SdoFrame),
     NmtNodeMonitoringFrame(NmtNodeMonitoringFrame),
 }
@@ -53,6 +57,7 @@ impl From<CanOpenFrame> for socketcan::CanFrame {
     fn from(frame: CanOpenFrame) -> Self {
         match frame {
             CanOpenFrame::NmtNodeControlFrame(frame) => frame.to_socketcan_frame(),
+            CanOpenFrame::SyncFrame(frame) => frame.to_socketcan_frame(),
             CanOpenFrame::SdoFrame(frame) => frame.to_socketcan_frame(),
             CanOpenFrame::NmtNodeMonitoringFrame(frame) => frame.to_socketcan_frame(),
         }
@@ -69,6 +74,7 @@ impl TryFrom<socketcan::CanFrame> for CanOpenFrame {
                     CommunicationObject::NmtNodeControl => {
                         Ok(NmtNodeControlFrame::from_bytes(frame.data())?.into())
                     }
+                    CommunicationObject::Sync => Ok(SyncFrame.into()),
                     CommunicationObject::TxSdo(node_id) => {
                         Ok(SdoFrame::from_direction_node_id_bytes(
                             Direction::Tx,
@@ -185,6 +191,15 @@ mod tests {
                 .unwrap()
                 .try_into();
         assert_eq!(frame, Err(Error::InvalidNodeId(255)));
+    }
+
+    #[test]
+    fn test_socketcan_frame_to_sync_frame() {
+        let frame: Result<CanOpenFrame> =
+            socketcan::CanFrame::new(socketcan::StandardId::new(0x080).unwrap(), &[])
+                .unwrap()
+                .try_into();
+        assert_eq!(frame, Ok(CanOpenFrame::SyncFrame(SyncFrame)));
     }
 
     #[test]

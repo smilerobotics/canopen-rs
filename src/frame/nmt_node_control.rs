@@ -12,7 +12,7 @@ pub enum NMTCommand {
 }
 
 impl NMTCommand {
-    fn to_byte(&self) -> u8 {
+    fn as_byte(&self) -> u8 {
         self.to_owned() as u8
     }
 
@@ -35,7 +35,7 @@ pub enum NMTNodeControlAddress {
 }
 
 impl NMTNodeControlAddress {
-    fn to_byte(&self) -> u8 {
+    fn as_byte(&self) -> u8 {
         match self {
             Self::AllNodes => 0x00,
             Self::Node(node_id) => node_id.as_raw(),
@@ -60,10 +60,7 @@ impl NMTNodeControlFrame {
     const FRAME_DATA_SIZE: usize = 2;
 
     pub fn new(command: NMTCommand, address: NMTNodeControlAddress) -> Self {
-        Self {
-            command: command,
-            address: address,
-        }
+        Self { command, address }
     }
 
     pub(super) fn from_bytes(bytes: &[u8]) -> Result<Self> {
@@ -94,8 +91,8 @@ impl ToSocketCANFrame for NMTNodeControlFrame {
     fn set_data(&self, buf: &mut [u8]) -> usize {
         assert!(buf.len() >= Self::FRAME_DATA_SIZE);
 
-        buf[0] = self.command.to_byte();
-        buf[1] = self.address.to_byte();
+        buf[0] = self.command.as_byte();
+        buf[1] = self.address.as_byte();
         Self::FRAME_DATA_SIZE
     }
 }
@@ -108,11 +105,11 @@ mod tests {
 
     #[test]
     fn test_nmt_command_to_byte() {
-        assert_eq!(NMTCommand::Operational.to_byte(), 0x01);
-        assert_eq!(NMTCommand::Stopped.to_byte(), 0x02);
-        assert_eq!(NMTCommand::PreOperational.to_byte(), 0x80);
-        assert_eq!(NMTCommand::ResetNode.to_byte(), 0x81);
-        assert_eq!(NMTCommand::ResetCommunication.to_byte(), 0x82);
+        assert_eq!(NMTCommand::Operational.as_byte(), 0x01);
+        assert_eq!(NMTCommand::Stopped.as_byte(), 0x02);
+        assert_eq!(NMTCommand::PreOperational.as_byte(), 0x80);
+        assert_eq!(NMTCommand::ResetNode.as_byte(), 0x81);
+        assert_eq!(NMTCommand::ResetCommunication.as_byte(), 0x82);
     }
 
     #[test]
@@ -137,13 +134,13 @@ mod tests {
 
     #[test]
     fn test_nmt_node_control_address_to_byte() {
-        assert_eq!(NMTNodeControlAddress::AllNodes.to_byte(), 0x00);
+        assert_eq!(NMTNodeControlAddress::AllNodes.as_byte(), 0x00);
         assert_eq!(
-            NMTNodeControlAddress::Node(1.try_into().unwrap()).to_byte(),
+            NMTNodeControlAddress::Node(1.try_into().unwrap()).as_byte(),
             0x01
         );
         assert_eq!(
-            NMTNodeControlAddress::Node(127.try_into().unwrap()).to_byte(),
+            NMTNodeControlAddress::Node(127.try_into().unwrap()).as_byte(),
             0x7F
         );
     }

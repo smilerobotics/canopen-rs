@@ -53,10 +53,10 @@ impl SDOFrame {
     pub fn new_sdo_read_frame(node_id: NodeID, index: u16, sub_index: u8) -> Self {
         Self {
             direction: Direction::Rx,
-            node_id: node_id,
+            node_id,
             ccs: ClientCommandSpecifier::InitiateUpload,
-            index: index,
-            sub_index: sub_index,
+            index,
+            sub_index,
             size: None,
             expedited: false,
             data: std::vec::Vec::new(),
@@ -66,10 +66,10 @@ impl SDOFrame {
     pub fn new_sdo_write_frame(node_id: NodeID, index: u16, sub_index: u8, data: &[u8]) -> Self {
         Self {
             direction: Direction::Rx,
-            node_id: node_id,
+            node_id,
             ccs: ClientCommandSpecifier::InitiateDownload,
-            index: index,
-            sub_index: sub_index,
+            index,
+            sub_index,
             size: Some(data.len()),
             expedited: true,
             data: data.into(),

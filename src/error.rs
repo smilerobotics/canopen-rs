@@ -8,6 +8,8 @@ pub enum Error {
     InvalidCobId(u16),
     #[error("Invalid NMT Command (0x{:02X})", .0)]
     InvalidNmtCommand(u8),
+    #[error("Invalid NMT State(0x{:02X})", .0)]
+    InvalidNmtState(u8),
     #[error("Invalid data length ({} bytes for {})", .length, .data_type)]
     InvalidDataLength { length: usize, data_type: String },
     #[error("Invalid client command specifier ({})", .0)]

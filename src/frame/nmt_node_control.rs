@@ -1,9 +1,9 @@
 use crate::error::{Error, Result};
-use crate::frame::{CANOpenFrame, ToSocketCANFrame};
-use crate::id::{CommunicationObject, NodeID};
+use crate::frame::{CanOpenFrame, ToSocketCanFrame};
+use crate::id::{CommunicationObject, NodeId};
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub enum NMTCommand {
+pub enum NmtCommand {
     Operational = 0x01,
     Stopped = 0x02,
     PreOperational = 0x80,
@@ -11,7 +11,7 @@ pub enum NMTCommand {
     ResetCommunication = 0x82,
 }
 
-impl NMTCommand {
+impl NmtCommand {
     fn as_byte(&self) -> u8 {
         self.to_owned() as u8
     }
@@ -23,18 +23,18 @@ impl NMTCommand {
             0x80 => Ok(Self::PreOperational),
             0x81 => Ok(Self::ResetNode),
             0x82 => Ok(Self::ResetCommunication),
-            _ => Err(Error::InvalidNMTCommand(byte)),
+            _ => Err(Error::InvalidNmtCommand(byte)),
         }
     }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub enum NMTNodeControlAddress {
+pub enum NmtNodeControlAddress {
     AllNodes,
-    Node(NodeID),
+    Node(NodeId),
 }
 
-impl NMTNodeControlAddress {
+impl NmtNodeControlAddress {
     fn as_byte(&self) -> u8 {
         match self {
             Self::AllNodes => 0x00,
@@ -51,15 +51,15 @@ impl NMTNodeControlAddress {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub struct NMTNodeControlFrame {
-    command: NMTCommand,
-    address: NMTNodeControlAddress,
+pub struct NmtNodeControlFrame {
+    command: NmtCommand,
+    address: NmtNodeControlAddress,
 }
 
-impl NMTNodeControlFrame {
+impl NmtNodeControlFrame {
     const FRAME_DATA_SIZE: usize = 2;
 
-    pub fn new(command: NMTCommand, address: NMTNodeControlAddress) -> Self {
+    pub fn new(command: NmtCommand, address: NmtNodeControlAddress) -> Self {
         Self { command, address }
     }
 
@@ -67,25 +67,25 @@ impl NMTNodeControlFrame {
         if bytes.len() != 2 {
             return Err(Error::InvalidDataLength {
                 length: bytes.len(),
-                data_type: "NMTNodeControlFrame".to_owned(),
+                data_type: "NmtNodeControlFrame".to_owned(),
             });
         }
         Ok(Self::new(
-            NMTCommand::from_byte(bytes[0])?,
-            NMTNodeControlAddress::from_byte(bytes[1])?,
+            NmtCommand::from_byte(bytes[0])?,
+            NmtNodeControlAddress::from_byte(bytes[1])?,
         ))
     }
 }
 
-impl From<NMTNodeControlFrame> for CANOpenFrame {
-    fn from(frame: NMTNodeControlFrame) -> Self {
-        CANOpenFrame::NMTNodeControlFrame(frame)
+impl From<NmtNodeControlFrame> for CanOpenFrame {
+    fn from(frame: NmtNodeControlFrame) -> Self {
+        CanOpenFrame::NmtNodeControlFrame(frame)
     }
 }
 
-impl ToSocketCANFrame for NMTNodeControlFrame {
+impl ToSocketCanFrame for NmtNodeControlFrame {
     fn communication_object(&self) -> CommunicationObject {
-        CommunicationObject::NMTNodeControl
+        CommunicationObject::NmtNodeControl
     }
 
     fn set_data(&self, buf: &mut [u8]) -> usize {
@@ -105,160 +105,160 @@ mod tests {
 
     #[test]
     fn test_nmt_command_to_byte() {
-        assert_eq!(NMTCommand::Operational.as_byte(), 0x01);
-        assert_eq!(NMTCommand::Stopped.as_byte(), 0x02);
-        assert_eq!(NMTCommand::PreOperational.as_byte(), 0x80);
-        assert_eq!(NMTCommand::ResetNode.as_byte(), 0x81);
-        assert_eq!(NMTCommand::ResetCommunication.as_byte(), 0x82);
+        assert_eq!(NmtCommand::Operational.as_byte(), 0x01);
+        assert_eq!(NmtCommand::Stopped.as_byte(), 0x02);
+        assert_eq!(NmtCommand::PreOperational.as_byte(), 0x80);
+        assert_eq!(NmtCommand::ResetNode.as_byte(), 0x81);
+        assert_eq!(NmtCommand::ResetCommunication.as_byte(), 0x82);
     }
 
     #[test]
     fn test_nmt_command_from_byte() {
-        let command = NMTCommand::from_byte(0x01);
-        assert_eq!(command, Ok(NMTCommand::Operational));
-        let command = NMTCommand::from_byte(0x02);
-        assert_eq!(command, Ok(NMTCommand::Stopped));
-        let command = NMTCommand::from_byte(0x80);
-        assert_eq!(command, Ok(NMTCommand::PreOperational));
-        let command = NMTCommand::from_byte(0x81);
-        assert_eq!(command, Ok(NMTCommand::ResetNode));
-        let command = NMTCommand::from_byte(0x82);
-        assert_eq!(command, Ok(NMTCommand::ResetCommunication));
-        let command = NMTCommand::from_byte(0x00);
-        assert_eq!(command, Err(Error::InvalidNMTCommand(0x00)));
-        let command = NMTCommand::from_byte(0x03);
-        assert_eq!(command, Err(Error::InvalidNMTCommand(0x03)));
-        let command = NMTCommand::from_byte(0xFF);
-        assert_eq!(command, Err(Error::InvalidNMTCommand(0xFF)));
+        let command = NmtCommand::from_byte(0x01);
+        assert_eq!(command, Ok(NmtCommand::Operational));
+        let command = NmtCommand::from_byte(0x02);
+        assert_eq!(command, Ok(NmtCommand::Stopped));
+        let command = NmtCommand::from_byte(0x80);
+        assert_eq!(command, Ok(NmtCommand::PreOperational));
+        let command = NmtCommand::from_byte(0x81);
+        assert_eq!(command, Ok(NmtCommand::ResetNode));
+        let command = NmtCommand::from_byte(0x82);
+        assert_eq!(command, Ok(NmtCommand::ResetCommunication));
+        let command = NmtCommand::from_byte(0x00);
+        assert_eq!(command, Err(Error::InvalidNmtCommand(0x00)));
+        let command = NmtCommand::from_byte(0x03);
+        assert_eq!(command, Err(Error::InvalidNmtCommand(0x03)));
+        let command = NmtCommand::from_byte(0xFF);
+        assert_eq!(command, Err(Error::InvalidNmtCommand(0xFF)));
     }
 
     #[test]
     fn test_nmt_node_control_address_to_byte() {
-        assert_eq!(NMTNodeControlAddress::AllNodes.as_byte(), 0x00);
+        assert_eq!(NmtNodeControlAddress::AllNodes.as_byte(), 0x00);
         assert_eq!(
-            NMTNodeControlAddress::Node(1.try_into().unwrap()).as_byte(),
+            NmtNodeControlAddress::Node(1.try_into().unwrap()).as_byte(),
             0x01
         );
         assert_eq!(
-            NMTNodeControlAddress::Node(127.try_into().unwrap()).as_byte(),
+            NmtNodeControlAddress::Node(127.try_into().unwrap()).as_byte(),
             0x7F
         );
     }
 
     #[test]
     fn test_nmt_node_control_address_from_byte() {
-        let address = NMTNodeControlAddress::from_byte(0x00);
-        assert_eq!(address, Ok(NMTNodeControlAddress::AllNodes));
-        let address = NMTNodeControlAddress::from_byte(0x01);
+        let address = NmtNodeControlAddress::from_byte(0x00);
+        assert_eq!(address, Ok(NmtNodeControlAddress::AllNodes));
+        let address = NmtNodeControlAddress::from_byte(0x01);
         assert_eq!(
             address,
-            Ok(NMTNodeControlAddress::Node(1.try_into().unwrap()))
+            Ok(NmtNodeControlAddress::Node(1.try_into().unwrap()))
         );
-        let address = NMTNodeControlAddress::from_byte(0x7F);
+        let address = NmtNodeControlAddress::from_byte(0x7F);
         assert_eq!(
             address,
-            Ok(NMTNodeControlAddress::Node(127.try_into().unwrap()))
+            Ok(NmtNodeControlAddress::Node(127.try_into().unwrap()))
         );
-        let address = NMTNodeControlAddress::from_byte(0x80);
+        let address = NmtNodeControlAddress::from_byte(0x80);
         assert_eq!(address, Err(Error::InvalidNodeId(128)));
-        let address = NMTNodeControlAddress::from_byte(0xFF);
+        let address = NmtNodeControlAddress::from_byte(0xFF);
         assert_eq!(address, Err(Error::InvalidNodeId(255)));
     }
 
     #[test]
     fn test_from_bytes() {
-        let frame = NMTNodeControlFrame::from_bytes(&[0x01, 0x00]);
+        let frame = NmtNodeControlFrame::from_bytes(&[0x01, 0x00]);
         assert_eq!(
             frame,
-            Ok(NMTNodeControlFrame {
-                command: NMTCommand::Operational,
-                address: NMTNodeControlAddress::AllNodes
+            Ok(NmtNodeControlFrame {
+                command: NmtCommand::Operational,
+                address: NmtNodeControlAddress::AllNodes
             })
         );
-        let frame = NMTNodeControlFrame::from_bytes(&[0x02, 0x01]);
+        let frame = NmtNodeControlFrame::from_bytes(&[0x02, 0x01]);
         assert_eq!(
             frame,
-            Ok(NMTNodeControlFrame {
-                command: NMTCommand::Stopped,
-                address: NMTNodeControlAddress::Node(1.try_into().unwrap()),
+            Ok(NmtNodeControlFrame {
+                command: NmtCommand::Stopped,
+                address: NmtNodeControlAddress::Node(1.try_into().unwrap()),
             })
         );
-        let frame = NMTNodeControlFrame::from_bytes(&[0x80, 0x02]);
+        let frame = NmtNodeControlFrame::from_bytes(&[0x80, 0x02]);
         assert_eq!(
             frame,
-            Ok(NMTNodeControlFrame {
-                command: NMTCommand::PreOperational,
-                address: NMTNodeControlAddress::Node(2.try_into().unwrap()),
+            Ok(NmtNodeControlFrame {
+                command: NmtCommand::PreOperational,
+                address: NmtNodeControlAddress::Node(2.try_into().unwrap()),
             })
         );
-        let frame = NMTNodeControlFrame::from_bytes(&[0x81, 0x03]);
+        let frame = NmtNodeControlFrame::from_bytes(&[0x81, 0x03]);
         assert_eq!(
             frame,
-            Ok(NMTNodeControlFrame {
-                command: NMTCommand::ResetNode,
-                address: NMTNodeControlAddress::Node(3.try_into().unwrap()),
+            Ok(NmtNodeControlFrame {
+                command: NmtCommand::ResetNode,
+                address: NmtNodeControlAddress::Node(3.try_into().unwrap()),
             })
         );
-        let frame = NMTNodeControlFrame::from_bytes(&[0x82, 0x7F]);
+        let frame = NmtNodeControlFrame::from_bytes(&[0x82, 0x7F]);
         assert_eq!(
             frame,
-            Ok(NMTNodeControlFrame {
-                command: NMTCommand::ResetCommunication,
-                address: NMTNodeControlAddress::Node(127.try_into().unwrap()),
+            Ok(NmtNodeControlFrame {
+                command: NmtCommand::ResetCommunication,
+                address: NmtNodeControlAddress::Node(127.try_into().unwrap()),
             })
         );
-        let frame = NMTNodeControlFrame::from_bytes(&[0x00, 0x00]);
-        assert_eq!(frame, Err(Error::InvalidNMTCommand(0)));
-        let frame = NMTNodeControlFrame::from_bytes(&[0x03, 0x00]);
-        assert_eq!(frame, Err(Error::InvalidNMTCommand(3)));
-        let frame = NMTNodeControlFrame::from_bytes(&[0xFF, 0x00]);
-        assert_eq!(frame, Err(Error::InvalidNMTCommand(255)));
-        let frame = NMTNodeControlFrame::from_bytes(&[0x01, 0x80]);
+        let frame = NmtNodeControlFrame::from_bytes(&[0x00, 0x00]);
+        assert_eq!(frame, Err(Error::InvalidNmtCommand(0)));
+        let frame = NmtNodeControlFrame::from_bytes(&[0x03, 0x00]);
+        assert_eq!(frame, Err(Error::InvalidNmtCommand(3)));
+        let frame = NmtNodeControlFrame::from_bytes(&[0xFF, 0x00]);
+        assert_eq!(frame, Err(Error::InvalidNmtCommand(255)));
+        let frame = NmtNodeControlFrame::from_bytes(&[0x01, 0x80]);
         assert_eq!(frame, Err(Error::InvalidNodeId(128)));
-        let frame = NMTNodeControlFrame::from_bytes(&[0x01, 0xFF]);
+        let frame = NmtNodeControlFrame::from_bytes(&[0x01, 0xFF]);
         assert_eq!(frame, Err(Error::InvalidNodeId(255)));
     }
 
     #[test]
     fn test_communication_object() {
         let frame =
-            NMTNodeControlFrame::new(NMTCommand::Operational, NMTNodeControlAddress::AllNodes);
+            NmtNodeControlFrame::new(NmtCommand::Operational, NmtNodeControlAddress::AllNodes);
         assert_eq!(
             frame.communication_object(),
-            CommunicationObject::NMTNodeControl
+            CommunicationObject::NmtNodeControl
         );
-        let frame = NMTNodeControlFrame::new(
-            NMTCommand::Stopped,
-            NMTNodeControlAddress::Node(1.try_into().unwrap()),
-        );
-        assert_eq!(
-            frame.communication_object(),
-            CommunicationObject::NMTNodeControl
-        );
-        let frame = NMTNodeControlFrame::new(
-            NMTCommand::PreOperational,
-            NMTNodeControlAddress::Node(2.try_into().unwrap()),
+        let frame = NmtNodeControlFrame::new(
+            NmtCommand::Stopped,
+            NmtNodeControlAddress::Node(1.try_into().unwrap()),
         );
         assert_eq!(
             frame.communication_object(),
-            CommunicationObject::NMTNodeControl
+            CommunicationObject::NmtNodeControl
         );
-        let frame = NMTNodeControlFrame::new(
-            NMTCommand::ResetNode,
-            NMTNodeControlAddress::Node(3.try_into().unwrap()),
+        let frame = NmtNodeControlFrame::new(
+            NmtCommand::PreOperational,
+            NmtNodeControlAddress::Node(2.try_into().unwrap()),
         );
         assert_eq!(
             frame.communication_object(),
-            CommunicationObject::NMTNodeControl
+            CommunicationObject::NmtNodeControl
+        );
+        let frame = NmtNodeControlFrame::new(
+            NmtCommand::ResetNode,
+            NmtNodeControlAddress::Node(3.try_into().unwrap()),
+        );
+        assert_eq!(
+            frame.communication_object(),
+            CommunicationObject::NmtNodeControl
         );
 
-        let frame = NMTNodeControlFrame::new(
-            NMTCommand::ResetCommunication,
-            NMTNodeControlAddress::Node(127.try_into().unwrap()),
+        let frame = NmtNodeControlFrame::new(
+            NmtCommand::ResetCommunication,
+            NmtNodeControlAddress::Node(127.try_into().unwrap()),
         );
         assert_eq!(
             frame.communication_object(),
-            CommunicationObject::NMTNodeControl
+            CommunicationObject::NmtNodeControl
         );
     }
 
@@ -267,38 +267,38 @@ mod tests {
         let mut buf = [0u8; 8];
 
         let frame_data_size =
-            NMTNodeControlFrame::new(NMTCommand::Operational, NMTNodeControlAddress::AllNodes)
+            NmtNodeControlFrame::new(NmtCommand::Operational, NmtNodeControlAddress::AllNodes)
                 .set_data(&mut buf);
         assert_eq!(frame_data_size, 2);
         assert_eq!(&buf[..frame_data_size], &[0x01, 0x00]);
 
-        let frame_data_size = NMTNodeControlFrame::new(
-            NMTCommand::Stopped,
-            NMTNodeControlAddress::Node(1.try_into().unwrap()),
+        let frame_data_size = NmtNodeControlFrame::new(
+            NmtCommand::Stopped,
+            NmtNodeControlAddress::Node(1.try_into().unwrap()),
         )
         .set_data(&mut buf);
         assert_eq!(frame_data_size, 2);
         assert_eq!(&buf[..frame_data_size], &[0x02, 0x01]);
 
-        let frame_data_size = NMTNodeControlFrame::new(
-            NMTCommand::PreOperational,
-            NMTNodeControlAddress::Node(2.try_into().unwrap()),
+        let frame_data_size = NmtNodeControlFrame::new(
+            NmtCommand::PreOperational,
+            NmtNodeControlAddress::Node(2.try_into().unwrap()),
         )
         .set_data(&mut buf);
         assert_eq!(frame_data_size, 2);
         assert_eq!(&buf[..frame_data_size], &[0x80, 0x02]);
 
-        let frame_data_size = NMTNodeControlFrame::new(
-            NMTCommand::ResetNode,
-            NMTNodeControlAddress::Node(3.try_into().unwrap()),
+        let frame_data_size = NmtNodeControlFrame::new(
+            NmtCommand::ResetNode,
+            NmtNodeControlAddress::Node(3.try_into().unwrap()),
         )
         .set_data(&mut buf);
         assert_eq!(frame_data_size, 2);
         assert_eq!(&buf[..frame_data_size], &[0x81, 0x03]);
 
-        let frame_data_size = NMTNodeControlFrame::new(
-            NMTCommand::ResetCommunication,
-            NMTNodeControlAddress::Node(127.try_into().unwrap()),
+        let frame_data_size = NmtNodeControlFrame::new(
+            NmtCommand::ResetCommunication,
+            NmtNodeControlAddress::Node(127.try_into().unwrap()),
         )
         .set_data(&mut buf);
         assert_eq!(frame_data_size, 2);
@@ -308,38 +308,38 @@ mod tests {
     #[test]
     fn test_nmt_node_control_frame_to_socketcan_frame() {
         let frame =
-            NMTNodeControlFrame::new(NMTCommand::Operational, NMTNodeControlAddress::AllNodes)
+            NmtNodeControlFrame::new(NmtCommand::Operational, NmtNodeControlAddress::AllNodes)
                 .to_socketcan_frame();
         assert_eq!(frame.raw_id(), 0x00);
         assert_eq!(frame.data(), &[0x01, 0x00]);
 
-        let frame = NMTNodeControlFrame::new(
-            NMTCommand::Stopped,
-            NMTNodeControlAddress::Node(1.try_into().unwrap()),
+        let frame = NmtNodeControlFrame::new(
+            NmtCommand::Stopped,
+            NmtNodeControlAddress::Node(1.try_into().unwrap()),
         )
         .to_socketcan_frame();
         assert_eq!(frame.raw_id(), 0x00);
         assert_eq!(frame.data(), &[0x02, 0x01]);
 
-        let frame = NMTNodeControlFrame::new(
-            NMTCommand::PreOperational,
-            NMTNodeControlAddress::Node(2.try_into().unwrap()),
+        let frame = NmtNodeControlFrame::new(
+            NmtCommand::PreOperational,
+            NmtNodeControlAddress::Node(2.try_into().unwrap()),
         )
         .to_socketcan_frame();
         assert_eq!(frame.raw_id(), 0x00);
         assert_eq!(frame.data(), &[0x80, 0x02]);
 
-        let frame = NMTNodeControlFrame::new(
-            NMTCommand::ResetNode,
-            NMTNodeControlAddress::Node(3.try_into().unwrap()),
+        let frame = NmtNodeControlFrame::new(
+            NmtCommand::ResetNode,
+            NmtNodeControlAddress::Node(3.try_into().unwrap()),
         )
         .to_socketcan_frame();
         assert_eq!(frame.raw_id(), 0x00);
         assert_eq!(frame.data(), &[0x81, 0x03]);
 
-        let frame = NMTNodeControlFrame::new(
-            NMTCommand::ResetCommunication,
-            NMTNodeControlAddress::Node(127.try_into().unwrap()),
+        let frame = NmtNodeControlFrame::new(
+            NmtCommand::ResetCommunication,
+            NmtNodeControlAddress::Node(127.try_into().unwrap()),
         )
         .to_socketcan_frame();
         assert_eq!(frame.raw_id(), 0x00);

@@ -29,8 +29,8 @@ pub use nmt_node_monitoring::{NmtNodeMonitoringFrame, NmtState};
 #[derive(Debug, PartialEq)]
 pub enum CanOpenFrame {
     NmtNodeControlFrame(NmtNodeControlFrame),
-    NmtNodeMonitoringFrame(NmtNodeMonitoringFrame),
     SdoFrame(SdoFrame),
+    NmtNodeMonitoringFrame(NmtNodeMonitoringFrame),
 }
 
 impl CanOpenFrame {
@@ -53,8 +53,8 @@ impl From<CanOpenFrame> for socketcan::CanFrame {
     fn from(frame: CanOpenFrame) -> Self {
         match frame {
             CanOpenFrame::NmtNodeControlFrame(frame) => frame.to_socketcan_frame(),
-            CanOpenFrame::NmtNodeMonitoringFrame(frame) => frame.to_socketcan_frame(),
             CanOpenFrame::SdoFrame(frame) => frame.to_socketcan_frame(),
+            CanOpenFrame::NmtNodeMonitoringFrame(frame) => frame.to_socketcan_frame(),
         }
     }
 }
@@ -69,9 +69,6 @@ impl TryFrom<socketcan::CanFrame> for CanOpenFrame {
                     CommunicationObject::NmtNodeControl => {
                         Ok(NmtNodeControlFrame::from_bytes(frame.data())?.into())
                     }
-                    CommunicationObject::NmtNodeMonitoring(node_id) => Ok(
-                        NmtNodeMonitoringFrame::from_node_id_bytes(node_id, frame.data())?.into(),
-                    ),
                     CommunicationObject::TxSdo(node_id) => {
                         Ok(SdoFrame::from_direction_node_id_bytes(
                             Direction::Tx,
@@ -88,6 +85,9 @@ impl TryFrom<socketcan::CanFrame> for CanOpenFrame {
                         )?
                         .into())
                     }
+                    CommunicationObject::NmtNodeMonitoring(node_id) => Ok(
+                        NmtNodeMonitoringFrame::from_node_id_bytes(node_id, frame.data())?.into(),
+                    ),
                     _ => Err(Error::NotImplemented),
                 }
             }

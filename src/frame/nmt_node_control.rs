@@ -1,5 +1,5 @@
 use crate::error::{Error, Result};
-use crate::frame::{CanOpenFrame, ToSocketCanFrame};
+use crate::frame::{CanOpenFrame, ConvertibleFrame};
 use crate::id::{CommunicationObject, NodeId};
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -63,7 +63,7 @@ impl NmtNodeControlFrame {
         Self { command, address }
     }
 
-    pub(super) fn from_bytes(bytes: &[u8]) -> Result<Self> {
+    pub(crate) fn from_bytes(bytes: &[u8]) -> Result<Self> {
         if bytes.len() != 2 {
             return Err(Error::InvalidDataLength {
                 length: bytes.len(),
@@ -83,7 +83,7 @@ impl From<NmtNodeControlFrame> for CanOpenFrame {
     }
 }
 
-impl ToSocketCanFrame for NmtNodeControlFrame {
+impl ConvertibleFrame for NmtNodeControlFrame {
     fn communication_object(&self) -> CommunicationObject {
         CommunicationObject::NmtNodeControl
     }
@@ -99,8 +99,6 @@ impl ToSocketCanFrame for NmtNodeControlFrame {
 
 #[cfg(test)]
 mod tests {
-    use socketcan::{EmbeddedFrame, Frame};
-
     use super::*;
 
     #[test]
@@ -303,46 +301,5 @@ mod tests {
         .set_data(&mut buf);
         assert_eq!(frame_data_size, 2);
         assert_eq!(&buf[..frame_data_size], &[0x82, 0x7F]);
-    }
-
-    #[test]
-    fn test_nmt_node_control_frame_to_socketcan_frame() {
-        let frame =
-            NmtNodeControlFrame::new(NmtCommand::Operational, NmtNodeControlAddress::AllNodes)
-                .to_socketcan_frame();
-        assert_eq!(frame.raw_id(), 0x00);
-        assert_eq!(frame.data(), &[0x01, 0x00]);
-
-        let frame = NmtNodeControlFrame::new(
-            NmtCommand::Stopped,
-            NmtNodeControlAddress::Node(1.try_into().unwrap()),
-        )
-        .to_socketcan_frame();
-        assert_eq!(frame.raw_id(), 0x00);
-        assert_eq!(frame.data(), &[0x02, 0x01]);
-
-        let frame = NmtNodeControlFrame::new(
-            NmtCommand::PreOperational,
-            NmtNodeControlAddress::Node(2.try_into().unwrap()),
-        )
-        .to_socketcan_frame();
-        assert_eq!(frame.raw_id(), 0x00);
-        assert_eq!(frame.data(), &[0x80, 0x02]);
-
-        let frame = NmtNodeControlFrame::new(
-            NmtCommand::ResetNode,
-            NmtNodeControlAddress::Node(3.try_into().unwrap()),
-        )
-        .to_socketcan_frame();
-        assert_eq!(frame.raw_id(), 0x00);
-        assert_eq!(frame.data(), &[0x81, 0x03]);
-
-        let frame = NmtNodeControlFrame::new(
-            NmtCommand::ResetCommunication,
-            NmtNodeControlAddress::Node(127.try_into().unwrap()),
-        )
-        .to_socketcan_frame();
-        assert_eq!(frame.raw_id(), 0x00);
-        assert_eq!(frame.data(), &[0x82, 0x7F]);
     }
 }

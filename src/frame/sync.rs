@@ -1,4 +1,4 @@
-use crate::frame::{CanOpenFrame, ToSocketCanFrame};
+use crate::frame::{CanOpenFrame, ConvertibleFrame};
 use crate::id::CommunicationObject;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -18,7 +18,7 @@ impl From<SyncFrame> for CanOpenFrame {
     }
 }
 
-impl ToSocketCanFrame for SyncFrame {
+impl ConvertibleFrame for SyncFrame {
     fn communication_object(&self) -> CommunicationObject {
         CommunicationObject::Sync
     }
@@ -30,8 +30,6 @@ impl ToSocketCanFrame for SyncFrame {
 
 #[cfg(test)]
 mod tests {
-    use socketcan::{EmbeddedFrame, Frame};
-
     use super::*;
 
     #[test]
@@ -45,12 +43,5 @@ mod tests {
 
         let frame_data_size = SyncFrame::new().set_data(&mut buf);
         assert_eq!(frame_data_size, 0);
-    }
-
-    #[test]
-    fn test_sync_frame_to_socketcan_frame() {
-        let frame = SyncFrame::new().to_socketcan_frame();
-        assert_eq!(frame.raw_id(), 0x080);
-        assert_eq!(frame.data(), &[]);
     }
 }

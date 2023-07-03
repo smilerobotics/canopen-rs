@@ -1,15 +1,15 @@
 use crate::error::{Error, Result};
-use crate::frame::{CanOpenFrame, ToSocketCanFrame};
+use crate::frame::{CanOpenFrame, ConvertibleFrame};
 use crate::id::{CommunicationObject, NodeId};
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub enum Direction {
+pub(crate) enum Direction {
     Tx,
     Rx,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub enum ClientCommandSpecifier {
+pub(crate) enum ClientCommandSpecifier {
     SegmentDownload = 0,
     InitiateDownload = 1,
     InitiateUpload = 2,
@@ -36,14 +36,14 @@ impl ClientCommandSpecifier {
 
 #[derive(Debug, PartialEq)]
 pub struct SdoFrame {
-    pub(super) direction: Direction,
-    pub(super) node_id: NodeId,
-    pub(super) ccs: ClientCommandSpecifier,
-    pub(super) index: u16,
-    pub(super) sub_index: u8,
-    pub(super) size: Option<usize>,
-    pub(super) expedited: bool,
-    pub(super) data: std::vec::Vec<u8>,
+    pub(crate) direction: Direction,
+    pub(crate) node_id: NodeId,
+    pub(crate) ccs: ClientCommandSpecifier,
+    pub(crate) index: u16,
+    pub(crate) sub_index: u8,
+    pub(crate) size: Option<usize>,
+    pub(crate) expedited: bool,
+    pub(crate) data: std::vec::Vec<u8>,
 }
 
 impl SdoFrame {
@@ -76,7 +76,7 @@ impl SdoFrame {
         }
     }
 
-    pub(super) fn from_direction_node_id_bytes(
+    pub(crate) fn from_direction_node_id_bytes(
         direction: Direction,
         node_id: NodeId,
         bytes: &[u8],
@@ -118,7 +118,7 @@ impl From<SdoFrame> for CanOpenFrame {
     }
 }
 
-impl ToSocketCanFrame for SdoFrame {
+impl ConvertibleFrame for SdoFrame {
     fn communication_object(&self) -> CommunicationObject {
         match self.direction {
             Direction::Tx => CommunicationObject::TxSdo(self.node_id),
@@ -147,8 +147,6 @@ impl ToSocketCanFrame for SdoFrame {
 
 #[cfg(test)]
 mod tests {
-    use socketcan::{EmbeddedFrame, Frame};
-
     use super::*;
 
     #[test]
@@ -558,87 +556,6 @@ mod tests {
         assert_eq!(frame_data_size, 8);
         assert_eq!(
             &buf[0..frame_data_size],
-            &[0x80, 0x00, 0x10, 0x00, 0x02, 0x00, 0x01, 0x06]
-        );
-    }
-
-    #[test]
-    fn test_sdo_frame_to_socketcan_frame() {
-        let frame =
-            SdoFrame::new_sdo_read_frame(1.try_into().unwrap(), 0x1018, 2).to_socketcan_frame(); // Product code
-        assert_eq!(frame.raw_id(), 0x601);
-        assert_eq!(
-            frame.data(),
-            &[0x40, 0x18, 0x10, 0x02, 0x00, 0x00, 0x00, 0x00]
-        );
-
-        let frame = SdoFrame::new_sdo_write_frame(1.try_into().unwrap(), 0x1402, 2, &[255]) // Transmission type RxPDO3
-            .to_socketcan_frame();
-        assert_eq!(frame.raw_id(), 0x601);
-        assert_eq!(
-            frame.data(),
-            &[0x2F, 0x02, 0x14, 0x02, 0xFF, 0x00, 0x00, 0x00]
-        );
-
-        let frame = SdoFrame::new_sdo_write_frame(
-            2.try_into().unwrap(),
-            0x1017,
-            0,
-            &(1000u16.to_le_bytes()),
-        ) // Producer heartbeat time
-        .to_socketcan_frame();
-        assert_eq!(frame.raw_id(), 0x602);
-        assert_eq!(
-            frame.data(),
-            &[0x2B, 0x17, 0x10, 0x00, 0xE8, 0x03, 0x00, 0x00]
-        );
-
-        let frame = SdoFrame::new_sdo_write_frame(
-            3.try_into().unwrap(),
-            0x1200,
-            1,
-            &(0x060Au32.to_le_bytes()),
-        ) // COB-ID SDO client to server
-        .to_socketcan_frame();
-        assert_eq!(frame.raw_id(), 0x603);
-        assert_eq!(
-            frame.data(),
-            &[0x23, 0x00, 0x12, 0x01, 0x0A, 0x06, 0x00, 0x00]
-        );
-
-        let frame = SdoFrame {
-            direction: Direction::Tx,
-            ccs: ClientCommandSpecifier::InitiateUpload,
-            node_id: 4.try_into().unwrap(),
-            // Device type
-            index: 0x1000,
-            sub_index: 0,
-            size: Some(4),
-            expedited: true,
-            data: vec![0x92, 0x01, 0x02, 0x00],
-        }
-        .to_socketcan_frame();
-        assert_eq!(frame.raw_id(), 0x584);
-        assert_eq!(
-            frame.data(),
-            &[0x43, 0x00, 0x10, 0x00, 0x92, 0x01, 0x02, 0x00]
-        );
-
-        let frame = SdoFrame {
-            direction: Direction::Tx,
-            ccs: ClientCommandSpecifier::AbortTransfer,
-            node_id: 5.try_into().unwrap(),
-            // Device type
-            index: 0x1000,
-            sub_index: 0,
-            size: None,
-            expedited: false,
-            data: vec![0x02, 0x00, 0x01, 0x06], // SDO_ERR_ACCESS_RO
-        }
-        .to_socketcan_frame();
-        assert_eq!(frame.raw_id(), 0x585);
-        assert_eq!(
-            frame.data(),
             &[0x80, 0x00, 0x10, 0x00, 0x02, 0x00, 0x01, 0x06]
         );
     }

@@ -45,11 +45,12 @@ pub enum CommunicationObject {
     RxLss,
 }
 
-impl CommunicationObject {
-    fn raw_id_to_node_id(cob_id: u16) -> NodeId {
-        ((cob_id & 0x7F) as u8).try_into().unwrap()
-    }
+#[inline]
+fn get_node_id_from_cob_id(cob_id: u16) -> NodeId {
+    NodeId::new((cob_id & 0x7F) as u8).unwrap()
+}
 
+impl CommunicationObject {
     pub(crate) fn new(id: u16) -> Result<Self> {
         match id & !0x07FF {
             0 => match id & 0b00000111_10000000 {
@@ -60,21 +61,21 @@ impl CommunicationObject {
                 },
                 0x080 => match id & 0x007F {
                     0 => Ok(CommunicationObject::Sync),
-                    _ => Ok(CommunicationObject::Emergency(Self::raw_id_to_node_id(id))),
+                    _ => Ok(CommunicationObject::Emergency(get_node_id_from_cob_id(id))),
                 },
                 0x100 => Ok(CommunicationObject::TimeStamp),
-                0x180 => Ok(CommunicationObject::TxPdo1(Self::raw_id_to_node_id(id))),
-                0x200 => Ok(CommunicationObject::RxPdo1(Self::raw_id_to_node_id(id))),
-                0x280 => Ok(CommunicationObject::TxPdo2(Self::raw_id_to_node_id(id))),
-                0x300 => Ok(CommunicationObject::RxPdo2(Self::raw_id_to_node_id(id))),
-                0x380 => Ok(CommunicationObject::TxPdo3(Self::raw_id_to_node_id(id))),
-                0x400 => Ok(CommunicationObject::RxPdo3(Self::raw_id_to_node_id(id))),
-                0x480 => Ok(CommunicationObject::TxPdo4(Self::raw_id_to_node_id(id))),
-                0x500 => Ok(CommunicationObject::RxPdo4(Self::raw_id_to_node_id(id))),
-                0x580 => Ok(CommunicationObject::TxSdo(Self::raw_id_to_node_id(id))),
-                0x600 => Ok(CommunicationObject::RxSdo(Self::raw_id_to_node_id(id))),
+                0x180 => Ok(CommunicationObject::TxPdo1(get_node_id_from_cob_id(id))),
+                0x200 => Ok(CommunicationObject::RxPdo1(get_node_id_from_cob_id(id))),
+                0x280 => Ok(CommunicationObject::TxPdo2(get_node_id_from_cob_id(id))),
+                0x300 => Ok(CommunicationObject::RxPdo2(get_node_id_from_cob_id(id))),
+                0x380 => Ok(CommunicationObject::TxPdo3(get_node_id_from_cob_id(id))),
+                0x400 => Ok(CommunicationObject::RxPdo3(get_node_id_from_cob_id(id))),
+                0x480 => Ok(CommunicationObject::TxPdo4(get_node_id_from_cob_id(id))),
+                0x500 => Ok(CommunicationObject::RxPdo4(get_node_id_from_cob_id(id))),
+                0x580 => Ok(CommunicationObject::TxSdo(get_node_id_from_cob_id(id))),
+                0x600 => Ok(CommunicationObject::RxSdo(get_node_id_from_cob_id(id))),
                 0x700 => Ok(CommunicationObject::NmtNodeMonitoring(
-                    Self::raw_id_to_node_id(id),
+                    get_node_id_from_cob_id(id),
                 )),
                 0x780 => match id {
                     0x7E4 => Ok(CommunicationObject::TxLss),

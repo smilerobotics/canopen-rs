@@ -63,7 +63,7 @@ impl NmtNodeControlFrame {
         Self { command, address }
     }
 
-    pub(crate) fn from_bytes(bytes: &[u8]) -> Result<Self> {
+    pub(crate) fn new_with_bytes(bytes: &[u8]) -> Result<Self> {
         if bytes.len() != 2 {
             return Err(Error::InvalidDataLength {
                 length: bytes.len(),
@@ -165,7 +165,7 @@ mod tests {
 
     #[test]
     fn test_from_bytes() {
-        let frame = NmtNodeControlFrame::from_bytes(&[0x01, 0x00]);
+        let frame = NmtNodeControlFrame::new_with_bytes(&[0x01, 0x00]);
         assert_eq!(
             frame,
             Ok(NmtNodeControlFrame {
@@ -173,7 +173,7 @@ mod tests {
                 address: NmtNodeControlAddress::AllNodes
             })
         );
-        let frame = NmtNodeControlFrame::from_bytes(&[0x02, 0x01]);
+        let frame = NmtNodeControlFrame::new_with_bytes(&[0x02, 0x01]);
         assert_eq!(
             frame,
             Ok(NmtNodeControlFrame {
@@ -181,7 +181,7 @@ mod tests {
                 address: NmtNodeControlAddress::Node(1.try_into().unwrap()),
             })
         );
-        let frame = NmtNodeControlFrame::from_bytes(&[0x80, 0x02]);
+        let frame = NmtNodeControlFrame::new_with_bytes(&[0x80, 0x02]);
         assert_eq!(
             frame,
             Ok(NmtNodeControlFrame {
@@ -189,7 +189,7 @@ mod tests {
                 address: NmtNodeControlAddress::Node(2.try_into().unwrap()),
             })
         );
-        let frame = NmtNodeControlFrame::from_bytes(&[0x81, 0x03]);
+        let frame = NmtNodeControlFrame::new_with_bytes(&[0x81, 0x03]);
         assert_eq!(
             frame,
             Ok(NmtNodeControlFrame {
@@ -197,7 +197,7 @@ mod tests {
                 address: NmtNodeControlAddress::Node(3.try_into().unwrap()),
             })
         );
-        let frame = NmtNodeControlFrame::from_bytes(&[0x82, 0x7F]);
+        let frame = NmtNodeControlFrame::new_with_bytes(&[0x82, 0x7F]);
         assert_eq!(
             frame,
             Ok(NmtNodeControlFrame {
@@ -205,15 +205,15 @@ mod tests {
                 address: NmtNodeControlAddress::Node(127.try_into().unwrap()),
             })
         );
-        let frame = NmtNodeControlFrame::from_bytes(&[0x00, 0x00]);
+        let frame = NmtNodeControlFrame::new_with_bytes(&[0x00, 0x00]);
         assert_eq!(frame, Err(Error::InvalidNmtCommand(0)));
-        let frame = NmtNodeControlFrame::from_bytes(&[0x03, 0x00]);
+        let frame = NmtNodeControlFrame::new_with_bytes(&[0x03, 0x00]);
         assert_eq!(frame, Err(Error::InvalidNmtCommand(3)));
-        let frame = NmtNodeControlFrame::from_bytes(&[0xFF, 0x00]);
+        let frame = NmtNodeControlFrame::new_with_bytes(&[0xFF, 0x00]);
         assert_eq!(frame, Err(Error::InvalidNmtCommand(255)));
-        let frame = NmtNodeControlFrame::from_bytes(&[0x01, 0x80]);
+        let frame = NmtNodeControlFrame::new_with_bytes(&[0x01, 0x80]);
         assert_eq!(frame, Err(Error::InvalidNodeId(128)));
-        let frame = NmtNodeControlFrame::from_bytes(&[0x01, 0xFF]);
+        let frame = NmtNodeControlFrame::new_with_bytes(&[0x01, 0xFF]);
         assert_eq!(frame, Err(Error::InvalidNodeId(255)));
     }
 

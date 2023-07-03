@@ -1,5 +1,5 @@
 use crate::error::{Error, Result};
-use crate::frame::{CanOpenFrame, ToSocketCanFrame};
+use crate::frame::{CanOpenFrame, ConvertibleFrame};
 use crate::id::{CommunicationObject, NodeId};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -20,7 +20,7 @@ impl EmergencyFrame {
         }
     }
 
-    pub(super) fn from_node_id_bytes(node_id: NodeId, bytes: &[u8]) -> Result<Self> {
+    pub(crate) fn from_node_id_bytes(node_id: NodeId, bytes: &[u8]) -> Result<Self> {
         if bytes.len() != Self::FRAME_DATA_SIZE {
             return Err(Error::InvalidDataLength {
                 length: bytes.len(),
@@ -41,7 +41,7 @@ impl From<EmergencyFrame> for CanOpenFrame {
     }
 }
 
-impl ToSocketCanFrame for EmergencyFrame {
+impl ConvertibleFrame for EmergencyFrame {
     fn communication_object(&self) -> CommunicationObject {
         CommunicationObject::Emergency(self.node_id)
     }
@@ -58,8 +58,6 @@ impl ToSocketCanFrame for EmergencyFrame {
 
 #[cfg(test)]
 mod tests {
-    use socketcan::{EmbeddedFrame, Frame};
-
     use super::*;
 
     #[test]
@@ -136,29 +134,5 @@ mod tests {
             EmergencyFrame::new(127.try_into().unwrap(), 0x1234, 0x56).set_data(&mut buf);
         assert_eq!(frame_data_size, 8);
         assert_eq!(&buf[..], &[0x34, 0x12, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00]);
-    }
-
-    #[test]
-    fn test_nmt_node_monitoring_frame_to_socketcan_frame() {
-        let frame = EmergencyFrame::new(1.try_into().unwrap(), 0x0000, 0x00).to_socketcan_frame();
-        assert_eq!(frame.raw_id(), 0x081);
-        assert_eq!(
-            frame.data(),
-            &[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-        );
-
-        let frame = EmergencyFrame::new(2.try_into().unwrap(), 0x1000, 0x01).to_socketcan_frame();
-        assert_eq!(frame.raw_id(), 0x082);
-        assert_eq!(
-            frame.data(),
-            &[0x00, 0x10, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00]
-        );
-
-        let frame = EmergencyFrame::new(127.try_into().unwrap(), 0x1234, 0x56).to_socketcan_frame();
-        assert_eq!(frame.raw_id(), 0x0FF);
-        assert_eq!(
-            frame.data(),
-            &[0x34, 0x12, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00]
-        );
     }
 }

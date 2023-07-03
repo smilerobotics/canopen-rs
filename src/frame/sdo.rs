@@ -81,6 +81,7 @@ impl SdoFrame {
         node_id: NodeId,
         bytes: &[u8],
     ) -> Result<Self> {
+        // cf. https://en.wikipedia.org/wiki/CANopen#Service_Data_Object_(SDO)_protocol
         let ccs = ClientCommandSpecifier::from_num(bytes[0] >> 5)?;
         let expedited: bool = (bytes[0] & 0b0010) != 0;
         let size = match bytes[0] & 0b0001 {
@@ -130,6 +131,7 @@ impl ConvertibleFrame for SdoFrame {
         assert!(buf.len() >= Self::FRAME_DATA_SIZE);
         assert!(self.data.len() <= Self::DATA_CONTENT_SIZE);
 
+        // cf. https://en.wikipedia.org/wiki/CANopen#Service_Data_Object_(SDO)_protocol
         buf[0] = ((self.ccs as u8) << 5)
             + self
                 .size

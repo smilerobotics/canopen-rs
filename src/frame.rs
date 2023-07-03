@@ -2,7 +2,7 @@ use crate::id::{CommunicationObject, NodeId};
 
 pub trait ConvertibleFrame {
     fn communication_object(&self) -> CommunicationObject;
-    fn set_data(&self, data: &mut [u8]) -> usize;
+    fn set_data<'a>(&self, buf: &'a mut [u8]) -> &'a [u8];
 }
 
 mod nmt_node_control;

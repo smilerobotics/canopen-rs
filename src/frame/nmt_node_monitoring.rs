@@ -39,7 +39,7 @@ impl NmtNodeMonitoringFrame {
         Self { node_id, state }
     }
 
-    pub(crate) fn from_node_id_bytes(node_id: NodeId, bytes: &[u8]) -> Result<Self> {
+    pub(crate) fn new_with_bytes(node_id: NodeId, bytes: &[u8]) -> Result<Self> {
         if bytes.len() != Self::FRAME_DATA_SIZE {
             return Err(Error::InvalidDataLength {
                 length: bytes.len(),
@@ -98,28 +98,28 @@ mod tests {
     #[test]
     fn test_from_node_id_bytes() {
         assert_eq!(
-            NmtNodeMonitoringFrame::from_node_id_bytes(1.try_into().unwrap(), &[0x00]),
+            NmtNodeMonitoringFrame::new_with_bytes(1.try_into().unwrap(), &[0x00]),
             Ok(NmtNodeMonitoringFrame {
                 node_id: 1.try_into().unwrap(),
                 state: NmtState::BootUp
             })
         );
         assert_eq!(
-            NmtNodeMonitoringFrame::from_node_id_bytes(2.try_into().unwrap(), &[0x04]),
+            NmtNodeMonitoringFrame::new_with_bytes(2.try_into().unwrap(), &[0x04]),
             Ok(NmtNodeMonitoringFrame {
                 node_id: 2.try_into().unwrap(),
                 state: NmtState::Stopped
             })
         );
         assert_eq!(
-            NmtNodeMonitoringFrame::from_node_id_bytes(3.try_into().unwrap(), &[0x05]),
+            NmtNodeMonitoringFrame::new_with_bytes(3.try_into().unwrap(), &[0x05]),
             Ok(NmtNodeMonitoringFrame {
                 node_id: 3.try_into().unwrap(),
                 state: NmtState::Operational
             })
         );
         assert_eq!(
-            NmtNodeMonitoringFrame::from_node_id_bytes(4.try_into().unwrap(), &[0x7F]),
+            NmtNodeMonitoringFrame::new_with_bytes(4.try_into().unwrap(), &[0x7F]),
             Ok(NmtNodeMonitoringFrame {
                 node_id: 4.try_into().unwrap(),
                 state: NmtState::PreOperational
@@ -127,15 +127,15 @@ mod tests {
         );
 
         assert_eq!(
-            NmtNodeMonitoringFrame::from_node_id_bytes(5.try_into().unwrap(), &[0x01]),
+            NmtNodeMonitoringFrame::new_with_bytes(5.try_into().unwrap(), &[0x01]),
             Err(Error::InvalidNmtState(0x01))
         );
         assert_eq!(
-            NmtNodeMonitoringFrame::from_node_id_bytes(6.try_into().unwrap(), &[0x06]),
+            NmtNodeMonitoringFrame::new_with_bytes(6.try_into().unwrap(), &[0x06]),
             Err(Error::InvalidNmtState(0x06))
         );
         assert_eq!(
-            NmtNodeMonitoringFrame::from_node_id_bytes(7.try_into().unwrap(), &[0x80]),
+            NmtNodeMonitoringFrame::new_with_bytes(7.try_into().unwrap(), &[0x80]),
             Err(Error::InvalidNmtState(0x80))
         );
     }

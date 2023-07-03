@@ -35,31 +35,21 @@ impl TryFrom<socketcan::CanFrame> for CanOpenFrame {
                 let cob: CommunicationObject = frame.id().try_into()?;
                 match cob {
                     CommunicationObject::NmtNodeControl => {
-                        Ok(NmtNodeControlFrame::from_bytes(frame.data())?.into())
+                        Ok(NmtNodeControlFrame::new_with_bytes(frame.data())?.into())
                     }
                     CommunicationObject::Sync => Ok(SyncFrame.into()),
                     CommunicationObject::Emergency(node_id) => {
-                        Ok(EmergencyFrame::from_node_id_bytes(node_id, frame.data())?.into())
+                        Ok(EmergencyFrame::new_with_bytes(node_id, frame.data())?.into())
                     }
                     CommunicationObject::TxSdo(node_id) => {
-                        Ok(SdoFrame::from_direction_node_id_bytes(
-                            Direction::Tx,
-                            node_id,
-                            frame.data(),
-                        )?
-                        .into())
+                        Ok(SdoFrame::new_wth_bytes(Direction::Tx, node_id, frame.data())?.into())
                     }
                     CommunicationObject::RxSdo(node_id) => {
-                        Ok(SdoFrame::from_direction_node_id_bytes(
-                            Direction::Rx,
-                            node_id,
-                            frame.data(),
-                        )?
-                        .into())
+                        Ok(SdoFrame::new_wth_bytes(Direction::Rx, node_id, frame.data())?.into())
                     }
-                    CommunicationObject::NmtNodeMonitoring(node_id) => Ok(
-                        NmtNodeMonitoringFrame::from_node_id_bytes(node_id, frame.data())?.into(),
-                    ),
+                    CommunicationObject::NmtNodeMonitoring(node_id) => {
+                        Ok(NmtNodeMonitoringFrame::new_with_bytes(node_id, frame.data())?.into())
+                    }
                     _ => Err(Error::NotImplemented),
                 }
             }

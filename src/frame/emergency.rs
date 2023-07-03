@@ -20,7 +20,7 @@ impl EmergencyFrame {
         }
     }
 
-    pub(crate) fn from_node_id_bytes(node_id: NodeId, bytes: &[u8]) -> Result<Self> {
+    pub(crate) fn new_with_bytes(node_id: NodeId, bytes: &[u8]) -> Result<Self> {
         if bytes.len() != Self::FRAME_DATA_SIZE {
             return Err(Error::InvalidDataLength {
                 length: bytes.len(),
@@ -63,7 +63,7 @@ mod tests {
     #[test]
     fn test_from_node_id_bytes() {
         assert_eq!(
-            EmergencyFrame::from_node_id_bytes(
+            EmergencyFrame::new_with_bytes(
                 1.try_into().unwrap(),
                 &[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
             ),
@@ -74,7 +74,7 @@ mod tests {
             })
         );
         assert_eq!(
-            EmergencyFrame::from_node_id_bytes(
+            EmergencyFrame::new_with_bytes(
                 2.try_into().unwrap(),
                 &[0x00, 0x10, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00]
             ),
@@ -85,7 +85,7 @@ mod tests {
             })
         );
         assert_eq!(
-            EmergencyFrame::from_node_id_bytes(
+            EmergencyFrame::new_with_bytes(
                 127.try_into().unwrap(),
                 &[0x34, 0x12, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00]
             ),
@@ -96,7 +96,7 @@ mod tests {
             })
         );
         assert!(
-            EmergencyFrame::from_node_id_bytes(1.try_into().unwrap(), &[0x00, 0x00, 0x00]).is_err()
+            EmergencyFrame::new_with_bytes(1.try_into().unwrap(), &[0x00, 0x00, 0x00]).is_err()
         );
     }
 

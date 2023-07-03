@@ -61,10 +61,12 @@ impl ConvertibleFrame for NmtNodeMonitoringFrame {
         CommunicationObject::NmtNodeMonitoring(self.node_id)
     }
 
-    fn set_data(&self, buf: &mut [u8]) -> usize {
+    fn set_data<'a>(&self, buf: &'a mut [u8]) -> &'a [u8] {
         assert!(buf.len() >= Self::FRAME_DATA_SIZE);
+
         buf[0] = self.state.as_byte();
-        Self::FRAME_DATA_SIZE
+
+        &buf[..Self::FRAME_DATA_SIZE]
     }
 }
 
@@ -168,26 +170,27 @@ mod tests {
     fn test_set_data() {
         let mut buf = [0u8; 8];
 
-        let frame_data_size =
+        let data =
             NmtNodeMonitoringFrame::new(1.try_into().unwrap(), NmtState::BootUp).set_data(&mut buf);
-        assert_eq!(frame_data_size, 1);
-        assert_eq!(&buf[..1], &[0x00]);
+        assert_eq!(data.len(), 1);
+        assert_eq!(data, &[0x00]);
 
-        let frame_data_size = NmtNodeMonitoringFrame::new(2.try_into().unwrap(), NmtState::Stopped)
+        buf.fill(0x00);
+        let data = NmtNodeMonitoringFrame::new(2.try_into().unwrap(), NmtState::Stopped)
             .set_data(&mut buf);
-        assert_eq!(frame_data_size, 1);
-        assert_eq!(&buf[..1], &[0x04]);
+        assert_eq!(data.len(), 1);
+        assert_eq!(data, &[0x04]);
 
-        let frame_data_size =
-            NmtNodeMonitoringFrame::new(3.try_into().unwrap(), NmtState::Operational)
-                .set_data(&mut buf);
-        assert_eq!(frame_data_size, 1);
-        assert_eq!(&buf[..1], &[0x05]);
+        buf.fill(0x00);
+        let data = NmtNodeMonitoringFrame::new(3.try_into().unwrap(), NmtState::Operational)
+            .set_data(&mut buf);
+        assert_eq!(data.len(), 1);
+        assert_eq!(data, &[0x05]);
 
-        let frame_data_size =
-            NmtNodeMonitoringFrame::new(4.try_into().unwrap(), NmtState::PreOperational)
-                .set_data(&mut buf);
-        assert_eq!(frame_data_size, 1);
-        assert_eq!(&buf[..1], &[0x7F]);
+        buf.fill(0x00);
+        let data = NmtNodeMonitoringFrame::new(4.try_into().unwrap(), NmtState::PreOperational)
+            .set_data(&mut buf);
+        assert_eq!(data.len(), 1);
+        assert_eq!(data, &[0x7F]);
     }
 }

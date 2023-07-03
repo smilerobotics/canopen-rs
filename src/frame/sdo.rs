@@ -126,7 +126,7 @@ impl ConvertibleFrame for SdoFrame {
         }
     }
 
-    fn set_data(&self, buf: &mut [u8]) -> usize {
+    fn set_data<'a>(&self, buf: &'a mut [u8]) -> &'a [u8] {
         assert!(buf.len() >= Self::FRAME_DATA_SIZE);
         assert!(self.data.len() <= Self::DATA_CONTENT_SIZE);
 
@@ -141,7 +141,7 @@ impl ConvertibleFrame for SdoFrame {
         buf[4..4 + self.data.len()].copy_from_slice(self.data.as_ref());
         buf[4 + self.data.len()..].fill(0x00);
 
-        Self::FRAME_DATA_SIZE
+        &buf[..Self::FRAME_DATA_SIZE]
     }
 }
 
@@ -446,7 +446,7 @@ mod tests {
     fn test_set_data() {
         let mut buf = [0u8; 8];
 
-        let frame_data_size = SdoFrame {
+        let data = SdoFrame {
             direction: Direction::Rx,
             ccs: ClientCommandSpecifier::InitiateUpload,
             node_id: 1.try_into().unwrap(),
@@ -458,14 +458,11 @@ mod tests {
             data: vec![],
         }
         .set_data(&mut buf);
-        assert_eq!(frame_data_size, 8);
-        assert_eq!(
-            &buf[..frame_data_size],
-            &[0x40, 0x18, 0x10, 0x02, 0x00, 0x00, 0x00, 0x00]
-        );
+        assert_eq!(data.len(), 8);
+        assert_eq!(data, &[0x40, 0x18, 0x10, 0x02, 0x00, 0x00, 0x00, 0x00]);
 
         buf.fill(0x00);
-        let frame_data_size = SdoFrame {
+        let data = SdoFrame {
             direction: Direction::Rx,
             ccs: ClientCommandSpecifier::InitiateDownload,
             node_id: 1.try_into().unwrap(),
@@ -477,14 +474,11 @@ mod tests {
             data: vec![0xFF],
         }
         .set_data(&mut buf);
-        assert_eq!(frame_data_size, 8);
-        assert_eq!(
-            &buf[..frame_data_size],
-            &[0x2F, 0x02, 0x14, 0x02, 0xFF, 0x00, 0x00, 0x00]
-        );
+        assert_eq!(data.len(), 8);
+        assert_eq!(data, &[0x2F, 0x02, 0x14, 0x02, 0xFF, 0x00, 0x00, 0x00]);
 
         buf.fill(0x00);
-        let frame_data_size = SdoFrame {
+        let data = SdoFrame {
             direction: Direction::Rx,
             ccs: ClientCommandSpecifier::InitiateDownload,
             node_id: 2.try_into().unwrap(),
@@ -496,14 +490,11 @@ mod tests {
             data: vec![0xE8, 0x03],
         }
         .set_data(&mut buf);
-        assert_eq!(frame_data_size, 8);
-        assert_eq!(
-            &buf[..frame_data_size],
-            &[0x2B, 0x17, 0x10, 0x00, 0xE8, 0x03, 0x00, 0x00]
-        );
+        assert_eq!(data.len(), 8);
+        assert_eq!(data, &[0x2B, 0x17, 0x10, 0x00, 0xE8, 0x03, 0x00, 0x00]);
 
         buf.fill(0x00);
-        let frame_data_size = SdoFrame {
+        let data = SdoFrame {
             direction: Direction::Rx,
             ccs: ClientCommandSpecifier::InitiateDownload,
             node_id: 3.try_into().unwrap(),
@@ -515,14 +506,11 @@ mod tests {
             data: vec![0x0A, 0x06, 0x00, 0x00],
         }
         .set_data(&mut buf);
-        assert_eq!(frame_data_size, 8);
-        assert_eq!(
-            &buf[0..frame_data_size],
-            &[0x23, 0x00, 0x12, 0x01, 0x0A, 0x06, 0x00, 0x00]
-        );
+        assert_eq!(data.len(), 8);
+        assert_eq!(data, &[0x23, 0x00, 0x12, 0x01, 0x0A, 0x06, 0x00, 0x00]);
 
         buf.fill(0x00);
-        let frame_data_size = SdoFrame {
+        let data = SdoFrame {
             direction: Direction::Tx,
             ccs: ClientCommandSpecifier::InitiateUpload,
             node_id: 4.try_into().unwrap(),
@@ -534,14 +522,11 @@ mod tests {
             data: vec![0x92, 0x01, 0x02, 0x00],
         }
         .set_data(&mut buf);
-        assert_eq!(frame_data_size, 8);
-        assert_eq!(
-            &buf[0..frame_data_size],
-            &[0x43, 0x00, 0x10, 0x00, 0x92, 0x01, 0x02, 0x00]
-        );
+        assert_eq!(data.len(), 8);
+        assert_eq!(data, &[0x43, 0x00, 0x10, 0x00, 0x92, 0x01, 0x02, 0x00]);
 
         buf.fill(0x00);
-        let frame_data_size = SdoFrame {
+        let data = SdoFrame {
             direction: Direction::Tx,
             ccs: ClientCommandSpecifier::AbortTransfer,
             node_id: 5.try_into().unwrap(),
@@ -553,10 +538,7 @@ mod tests {
             data: vec![0x02, 0x00, 0x01, 0x06], // SDO_ERR_ACCESS_RO
         }
         .set_data(&mut buf);
-        assert_eq!(frame_data_size, 8);
-        assert_eq!(
-            &buf[0..frame_data_size],
-            &[0x80, 0x00, 0x10, 0x00, 0x02, 0x00, 0x01, 0x06]
-        );
+        assert_eq!(data.len(), 8);
+        assert_eq!(data, &[0x80, 0x00, 0x10, 0x00, 0x02, 0x00, 0x01, 0x06]);
     }
 }

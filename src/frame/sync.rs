@@ -5,8 +5,6 @@ use crate::id::CommunicationObject;
 pub struct SyncFrame;
 
 impl SyncFrame {
-    const FRAME_DATA_SIZE: usize = 0;
-
     pub fn new() -> Self {
         Self
     }
@@ -23,8 +21,8 @@ impl ConvertibleFrame for SyncFrame {
         CommunicationObject::Sync
     }
 
-    fn set_data(&self, _data: &mut [u8]) -> usize {
-        Self::FRAME_DATA_SIZE
+    fn set_data<'a>(&self, buf: &'a mut [u8]) -> &'a [u8] {
+        &buf[..0]
     }
 }
 
@@ -41,7 +39,7 @@ mod tests {
     fn test_set_data() {
         let mut buf = [0u8; 8];
 
-        let frame_data_size = SyncFrame::new().set_data(&mut buf);
-        assert_eq!(frame_data_size, 0);
+        let data = SyncFrame::new().set_data(&mut buf);
+        assert_eq!(data, &[]);
     }
 }

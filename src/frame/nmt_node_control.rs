@@ -88,12 +88,13 @@ impl ConvertibleFrame for NmtNodeControlFrame {
         CommunicationObject::NmtNodeControl
     }
 
-    fn set_data(&self, buf: &mut [u8]) -> usize {
+    fn set_data<'a>(&self, buf: &'a mut [u8]) -> &'a [u8] {
         assert!(buf.len() >= Self::FRAME_DATA_SIZE);
 
         buf[0] = self.command.as_byte();
         buf[1] = self.address.as_byte();
-        Self::FRAME_DATA_SIZE
+
+        &buf[..Self::FRAME_DATA_SIZE]
     }
 }
 
@@ -264,42 +265,46 @@ mod tests {
     fn test_set_data() {
         let mut buf = [0u8; 8];
 
-        let frame_data_size =
+        let data =
             NmtNodeControlFrame::new(NmtCommand::Operational, NmtNodeControlAddress::AllNodes)
                 .set_data(&mut buf);
-        assert_eq!(frame_data_size, 2);
-        assert_eq!(&buf[..frame_data_size], &[0x01, 0x00]);
+        assert_eq!(data.len(), 2);
+        assert_eq!(data, &[0x01, 0x00]);
 
-        let frame_data_size = NmtNodeControlFrame::new(
+        buf.fill(0x00);
+        let data = NmtNodeControlFrame::new(
             NmtCommand::Stopped,
             NmtNodeControlAddress::Node(1.try_into().unwrap()),
         )
         .set_data(&mut buf);
-        assert_eq!(frame_data_size, 2);
-        assert_eq!(&buf[..frame_data_size], &[0x02, 0x01]);
+        assert_eq!(data.len(), 2);
+        assert_eq!(data, &[0x02, 0x01]);
 
-        let frame_data_size = NmtNodeControlFrame::new(
+        buf.fill(0x00);
+        let data = NmtNodeControlFrame::new(
             NmtCommand::PreOperational,
             NmtNodeControlAddress::Node(2.try_into().unwrap()),
         )
         .set_data(&mut buf);
-        assert_eq!(frame_data_size, 2);
-        assert_eq!(&buf[..frame_data_size], &[0x80, 0x02]);
+        assert_eq!(data.len(), 2);
+        assert_eq!(data, &[0x80, 0x02]);
 
-        let frame_data_size = NmtNodeControlFrame::new(
+        buf.fill(0x00);
+        let data = NmtNodeControlFrame::new(
             NmtCommand::ResetNode,
             NmtNodeControlAddress::Node(3.try_into().unwrap()),
         )
         .set_data(&mut buf);
-        assert_eq!(frame_data_size, 2);
-        assert_eq!(&buf[..frame_data_size], &[0x81, 0x03]);
+        assert_eq!(data.len(), 2);
+        assert_eq!(data, &[0x81, 0x03]);
 
-        let frame_data_size = NmtNodeControlFrame::new(
+        buf.fill(0x00);
+        let data = NmtNodeControlFrame::new(
             NmtCommand::ResetCommunication,
             NmtNodeControlAddress::Node(127.try_into().unwrap()),
         )
         .set_data(&mut buf);
-        assert_eq!(frame_data_size, 2);
-        assert_eq!(&buf[..frame_data_size], &[0x82, 0x7F]);
+        assert_eq!(data.len(), 2);
+        assert_eq!(data, &[0x82, 0x7F]);
     }
 }

@@ -10,9 +10,9 @@ use crate::frame::{
 use crate::id::CommunicationObject;
 
 pub fn to_socketcan_frame<T: ConvertibleFrame>(frame: T) -> socketcan::CanFrame {
-    let mut data = [0u8; CAN_MAX_DLEN];
-    let data_size = frame.set_data(&mut data);
-    socketcan::CanFrame::new(frame.communication_object(), &data[0..data_size]).unwrap()
+    let mut buf = [0u8; CAN_MAX_DLEN];
+    let data = frame.set_data(&mut buf);
+    socketcan::CanFrame::new(frame.communication_object(), data).unwrap()
 }
 
 impl From<CanOpenFrame> for socketcan::CanFrame {

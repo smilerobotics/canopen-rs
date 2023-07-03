@@ -46,13 +46,14 @@ impl ConvertibleFrame for EmergencyFrame {
         CommunicationObject::Emergency(self.node_id)
     }
 
-    fn set_data(&self, data: &mut [u8]) -> usize {
-        assert!(data.len() >= Self::FRAME_DATA_SIZE);
-        data[0..2].copy_from_slice(&self.error_code.to_le_bytes());
-        data[2] = self.error_register;
-        data[3..].fill(0x00);
+    fn set_data<'a>(&self, buf: &'a mut [u8]) -> &'a [u8] {
+        assert!(buf.len() >= Self::FRAME_DATA_SIZE);
 
-        Self::FRAME_DATA_SIZE
+        buf[0..2].copy_from_slice(&self.error_code.to_le_bytes());
+        buf[2] = self.error_register;
+        buf[3..].fill(0x00);
+
+        &buf[..Self::FRAME_DATA_SIZE]
     }
 }
 
@@ -120,19 +121,18 @@ mod tests {
     fn test_set_data() {
         let mut buf = [0u8; 8];
 
-        let frame_data_size =
-            EmergencyFrame::new(1.try_into().unwrap(), 0x0000, 0x00).set_data(&mut buf);
-        assert_eq!(frame_data_size, 8);
-        assert_eq!(&buf[..], &[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+        let data = EmergencyFrame::new(1.try_into().unwrap(), 0x0000, 0x00).set_data(&mut buf);
+        assert_eq!(data.len(), 8);
+        assert_eq!(data, &[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
 
-        let frame_data_size =
-            EmergencyFrame::new(2.try_into().unwrap(), 0x1000, 0x01).set_data(&mut buf);
-        assert_eq!(frame_data_size, 8);
-        assert_eq!(&buf[..], &[0x00, 0x10, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00]);
+        buf.fill(0x00);
+        let data = EmergencyFrame::new(2.try_into().unwrap(), 0x1000, 0x01).set_data(&mut buf);
+        assert_eq!(data.len(), 8);
+        assert_eq!(data, &[0x00, 0x10, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00]);
 
-        let frame_data_size =
-            EmergencyFrame::new(127.try_into().unwrap(), 0x1234, 0x56).set_data(&mut buf);
-        assert_eq!(frame_data_size, 8);
-        assert_eq!(&buf[..], &[0x34, 0x12, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00]);
+        buf.fill(0x00);
+        let data = EmergencyFrame::new(127.try_into().unwrap(), 0x1234, 0x56).set_data(&mut buf);
+        assert_eq!(data.len(), 8);
+        assert_eq!(data, &[0x34, 0x12, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00]);
     }
 }

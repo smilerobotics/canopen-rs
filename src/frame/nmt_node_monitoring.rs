@@ -61,12 +61,11 @@ impl ConvertibleFrame for NmtNodeMonitoringFrame {
         CommunicationObject::NmtNodeMonitoring(self.node_id)
     }
 
-    fn set_data<'a>(&self, buf: &'a mut [u8]) -> &'a [u8] {
-        assert!(buf.len() >= Self::FRAME_DATA_SIZE);
-
-        buf[0] = self.state.as_byte();
-
-        &buf[..Self::FRAME_DATA_SIZE]
+    fn frame_data(&self) -> std::vec::Vec<u8> {
+        let mut data = std::vec::Vec::new();
+        data.push(self.state.as_byte());
+        assert_eq!(data.len(), Self::FRAME_DATA_SIZE);
+        data
     }
 }
 
@@ -171,25 +170,25 @@ mod tests {
         let mut buf = [0u8; 8];
 
         let data =
-            NmtNodeMonitoringFrame::new(1.try_into().unwrap(), NmtState::BootUp).set_data(&mut buf);
+            NmtNodeMonitoringFrame::new(1.try_into().unwrap(), NmtState::BootUp).frame_data();
         assert_eq!(data.len(), 1);
         assert_eq!(data, &[0x00]);
 
         buf.fill(0x00);
-        let data = NmtNodeMonitoringFrame::new(2.try_into().unwrap(), NmtState::Stopped)
-            .set_data(&mut buf);
+        let data =
+            NmtNodeMonitoringFrame::new(2.try_into().unwrap(), NmtState::Stopped).frame_data();
         assert_eq!(data.len(), 1);
         assert_eq!(data, &[0x04]);
 
         buf.fill(0x00);
-        let data = NmtNodeMonitoringFrame::new(3.try_into().unwrap(), NmtState::Operational)
-            .set_data(&mut buf);
+        let data =
+            NmtNodeMonitoringFrame::new(3.try_into().unwrap(), NmtState::Operational).frame_data();
         assert_eq!(data.len(), 1);
         assert_eq!(data, &[0x05]);
 
         buf.fill(0x00);
         let data = NmtNodeMonitoringFrame::new(4.try_into().unwrap(), NmtState::PreOperational)
-            .set_data(&mut buf);
+            .frame_data();
         assert_eq!(data.len(), 1);
         assert_eq!(data, &[0x7F]);
     }

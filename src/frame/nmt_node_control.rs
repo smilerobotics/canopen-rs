@@ -88,13 +88,12 @@ impl ConvertibleFrame for NmtNodeControlFrame {
         CommunicationObject::NmtNodeControl
     }
 
-    fn set_data<'a>(&self, buf: &'a mut [u8]) -> &'a [u8] {
-        assert!(buf.len() >= Self::FRAME_DATA_SIZE);
-
-        buf[0] = self.command.as_byte();
-        buf[1] = self.address.as_byte();
-
-        &buf[..Self::FRAME_DATA_SIZE]
+    fn frame_data(&self) -> std::vec::Vec<u8> {
+        let mut data = std::vec::Vec::new();
+        data.push(self.command.as_byte());
+        data.push(self.address.as_byte());
+        assert_eq!(data.len(), Self::FRAME_DATA_SIZE);
+        data
     }
 }
 
@@ -267,7 +266,7 @@ mod tests {
 
         let data =
             NmtNodeControlFrame::new(NmtCommand::Operational, NmtNodeControlAddress::AllNodes)
-                .set_data(&mut buf);
+                .frame_data();
         assert_eq!(data.len(), 2);
         assert_eq!(data, &[0x01, 0x00]);
 
@@ -276,7 +275,7 @@ mod tests {
             NmtCommand::Stopped,
             NmtNodeControlAddress::Node(1.try_into().unwrap()),
         )
-        .set_data(&mut buf);
+        .frame_data();
         assert_eq!(data.len(), 2);
         assert_eq!(data, &[0x02, 0x01]);
 
@@ -285,7 +284,7 @@ mod tests {
             NmtCommand::PreOperational,
             NmtNodeControlAddress::Node(2.try_into().unwrap()),
         )
-        .set_data(&mut buf);
+        .frame_data();
         assert_eq!(data.len(), 2);
         assert_eq!(data, &[0x80, 0x02]);
 
@@ -294,7 +293,7 @@ mod tests {
             NmtCommand::ResetNode,
             NmtNodeControlAddress::Node(3.try_into().unwrap()),
         )
-        .set_data(&mut buf);
+        .frame_data();
         assert_eq!(data.len(), 2);
         assert_eq!(data, &[0x81, 0x03]);
 
@@ -303,7 +302,7 @@ mod tests {
             NmtCommand::ResetCommunication,
             NmtNodeControlAddress::Node(127.try_into().unwrap()),
         )
-        .set_data(&mut buf);
+        .frame_data();
         assert_eq!(data.len(), 2);
         assert_eq!(data, &[0x82, 0x7F]);
     }

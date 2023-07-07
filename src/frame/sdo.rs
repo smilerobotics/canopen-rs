@@ -132,23 +132,24 @@ impl ConvertibleFrame for SdoFrame {
         }
     }
 
-    fn set_data<'a>(&self, buf: &'a mut [u8]) -> &'a [u8] {
-        assert!(buf.len() >= Self::FRAME_DATA_SIZE);
+    fn frame_data(&self) -> std::vec::Vec<u8> {
         assert!(self.data.len() <= Self::DATA_CONTENT_SIZE);
-
+        let mut data = std::vec::Vec::new();
         // cf. https://en.wikipedia.org/wiki/CANopen#Service_Data_Object_(SDO)_protocol
-        buf[0] = ((self.ccs as u8) << 5)
-            + self
-                .size
-                .map_or(0, |size| (((4 - size) as u8) << 2) & 0b1100)
-            + ((self.expedited as u8) << 1)
-            + (self.size.is_some() as u8);
-        buf[1..3].copy_from_slice(&self.index.to_le_bytes());
-        buf[3] = self.sub_index;
-        buf[4..4 + self.data.len()].copy_from_slice(self.data.as_ref());
-        buf[4 + self.data.len()..].fill(0x00);
-
-        &buf[..Self::FRAME_DATA_SIZE]
+        data.push(
+            ((self.ccs as u8) << 5)
+                + self
+                    .size
+                    .map_or(0, |size| (((4 - size) as u8) << 2) & 0b1100)
+                + ((self.expedited as u8) << 1)
+                + (self.size.is_some() as u8),
+        );
+        data.extend_from_slice(&self.index.to_le_bytes());
+        data.push(self.sub_index);
+        data.extend_from_slice(self.data.as_ref());
+        data.resize(Self::FRAME_DATA_SIZE, 0x00);
+        assert_eq!(data.len(), Self::FRAME_DATA_SIZE);
+        data
     }
 }
 
@@ -464,7 +465,7 @@ mod tests {
             expedited: false,
             data: vec![],
         }
-        .set_data(&mut buf);
+        .frame_data();
         assert_eq!(data.len(), 8);
         assert_eq!(data, &[0x40, 0x18, 0x10, 0x02, 0x00, 0x00, 0x00, 0x00]);
 
@@ -480,7 +481,7 @@ mod tests {
             expedited: true,
             data: vec![0xFF],
         }
-        .set_data(&mut buf);
+        .frame_data();
         assert_eq!(data.len(), 8);
         assert_eq!(data, &[0x2F, 0x02, 0x14, 0x02, 0xFF, 0x00, 0x00, 0x00]);
 
@@ -496,7 +497,7 @@ mod tests {
             expedited: true,
             data: vec![0xE8, 0x03],
         }
-        .set_data(&mut buf);
+        .frame_data();
         assert_eq!(data.len(), 8);
         assert_eq!(data, &[0x2B, 0x17, 0x10, 0x00, 0xE8, 0x03, 0x00, 0x00]);
 
@@ -512,7 +513,7 @@ mod tests {
             expedited: true,
             data: vec![0x0A, 0x06, 0x00, 0x00],
         }
-        .set_data(&mut buf);
+        .frame_data();
         assert_eq!(data.len(), 8);
         assert_eq!(data, &[0x23, 0x00, 0x12, 0x01, 0x0A, 0x06, 0x00, 0x00]);
 
@@ -528,7 +529,7 @@ mod tests {
             expedited: true,
             data: vec![0x92, 0x01, 0x02, 0x00],
         }
-        .set_data(&mut buf);
+        .frame_data();
         assert_eq!(data.len(), 8);
         assert_eq!(data, &[0x43, 0x00, 0x10, 0x00, 0x92, 0x01, 0x02, 0x00]);
 
@@ -544,7 +545,7 @@ mod tests {
             expedited: false,
             data: vec![0x02, 0x00, 0x01, 0x06], // SDO_ERR_ACCESS_RO
         }
-        .set_data(&mut buf);
+        .frame_data();
         assert_eq!(data.len(), 8);
         assert_eq!(data, &[0x80, 0x00, 0x10, 0x00, 0x02, 0x00, 0x01, 0x06]);
     }

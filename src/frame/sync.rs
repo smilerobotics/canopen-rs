@@ -21,8 +21,8 @@ impl ConvertibleFrame for SyncFrame {
         CommunicationObject::Sync
     }
 
-    fn set_data<'a>(&self, buf: &'a mut [u8]) -> &'a [u8] {
-        &buf[..0]
+    fn frame_data(&self) -> std::vec::Vec<u8> {
+        std::vec::Vec::new()
     }
 }
 
@@ -37,9 +37,7 @@ mod tests {
 
     #[test]
     fn test_set_data() {
-        let mut buf = [0u8; 8];
-
-        let data = SyncFrame::new().set_data(&mut buf);
+        let data = SyncFrame::new().frame_data();
         assert_eq!(data, &[]);
     }
 }

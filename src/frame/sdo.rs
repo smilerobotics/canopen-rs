@@ -76,7 +76,7 @@ impl SdoFrame {
         }
     }
 
-    pub(crate) fn new_wth_bytes(
+    pub(crate) fn new_with_bytes(
         direction: Direction,
         node_id: NodeId,
         bytes: &[u8],
@@ -274,7 +274,7 @@ mod tests {
     #[test]
     fn test_from_direction_node_id_bytes() {
         assert_eq!(
-            SdoFrame::new_wth_bytes(
+            SdoFrame::new_with_bytes(
                 Direction::Rx,
                 1.try_into().unwrap(),
                 &[0x40, 0x18, 0x10, 0x02, 0x00, 0x00, 0x00, 0x00],
@@ -291,7 +291,7 @@ mod tests {
             })
         );
         assert_eq!(
-            SdoFrame::new_wth_bytes(
+            SdoFrame::new_with_bytes(
                 Direction::Rx,
                 1.try_into().unwrap(),
                 &[0x2F, 0x02, 0x14, 0x02, 0xFF, 0x00, 0x00, 0x00],
@@ -308,7 +308,7 @@ mod tests {
             })
         );
         assert_eq!(
-            SdoFrame::new_wth_bytes(
+            SdoFrame::new_with_bytes(
                 Direction::Rx,
                 2.try_into().unwrap(),
                 &[0x2B, 0x17, 0x10, 0x00, 0xE8, 0x03, 0x00, 0x00],
@@ -325,7 +325,7 @@ mod tests {
             })
         );
         assert_eq!(
-            SdoFrame::new_wth_bytes(
+            SdoFrame::new_with_bytes(
                 Direction::Rx,
                 3.try_into().unwrap(),
                 &[0x23, 0x00, 0x12, 0x01, 0x0A, 0x06, 0x00, 0x00],
@@ -342,7 +342,7 @@ mod tests {
             })
         );
         assert_eq!(
-            SdoFrame::new_wth_bytes(
+            SdoFrame::new_with_bytes(
                 Direction::Tx,
                 4.try_into().unwrap(),
                 &[0x43, 0x00, 0x10, 0x00, 0x92, 0x01, 0x02, 0x00],
@@ -359,7 +359,7 @@ mod tests {
             })
         );
         assert_eq!(
-            SdoFrame::new_wth_bytes(
+            SdoFrame::new_with_bytes(
                 Direction::Tx,
                 5.try_into().unwrap(),
                 &[0x80, 0x00, 0x10, 0x00, 0x02, 0x00, 0x01, 0x06],

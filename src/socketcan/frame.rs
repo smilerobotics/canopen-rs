@@ -43,10 +43,10 @@ impl TryFrom<socketcan::CanFrame> for CanOpenFrame {
                         Ok(EmergencyFrame::new_with_bytes(node_id, frame.data())?.into())
                     }
                     CommunicationObject::TxSdo(node_id) => {
-                        Ok(SdoFrame::new_wth_bytes(Direction::Tx, node_id, frame.data())?.into())
+                        Ok(SdoFrame::new_with_bytes(Direction::Tx, node_id, frame.data())?.into())
                     }
                     CommunicationObject::RxSdo(node_id) => {
-                        Ok(SdoFrame::new_wth_bytes(Direction::Rx, node_id, frame.data())?.into())
+                        Ok(SdoFrame::new_with_bytes(Direction::Rx, node_id, frame.data())?.into())
                     }
                     CommunicationObject::NmtNodeMonitoring(node_id) => {
                         Ok(NmtNodeMonitoringFrame::new_with_bytes(node_id, frame.data())?.into())
@@ -241,7 +241,7 @@ mod tests {
     }
 
     #[test]
-    fn test_socketcan_frame_to_emergyncy_frame() {
+    fn test_socketcan_frame_to_emergency_frame() {
         let frame: Result<CanOpenFrame> = socketcan::CanFrame::new(
             socketcan::StandardId::new(0x081).unwrap(),
             &[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],

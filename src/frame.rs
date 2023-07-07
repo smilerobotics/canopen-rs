@@ -38,7 +38,12 @@ impl CanOpenFrame {
         Self::SdoFrame(SdoFrame::new_sdo_read_frame(node_id, index, sub_index))
     }
 
-    pub fn new_sdo_write_frame(node_id: NodeId, index: u16, sub_index: u8, data: &[u8]) -> Self {
+    pub fn new_sdo_write_frame(
+        node_id: NodeId,
+        index: u16,
+        sub_index: u8,
+        data: std::vec::Vec<u8>,
+    ) -> Self {
         Self::SdoFrame(SdoFrame::new_sdo_write_frame(
             node_id, index, sub_index, data,
         ))

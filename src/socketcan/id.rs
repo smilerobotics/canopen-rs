@@ -3,10 +3,9 @@ use crate::id::CommunicationObject;
 
 impl From<CommunicationObject> for socketcan::Id {
     fn from(cob: CommunicationObject) -> Self {
-        socketcan::Id::Standard(socketcan::StandardId::new(cob.as_cob_id()).unwrap())
-        // The `new` method could return `None` if the raw ID is greater than 0x7FF.
-        // But `CommunicationObject::as_cob_id` method never returns such values,
-        // because its inner node_id is limited.
+        socketcan::Id::Standard(socketcan::StandardId::new(cob.as_cob_id()).expect(
+            "Should have failed only when the passed raw ID was out of range (11-bit), but the COB-ID must not have been out of the range."
+        ))
     }
 }
 

@@ -47,7 +47,8 @@ pub enum CommunicationObject {
 
 #[inline]
 fn get_node_id_from_cob_id(cob_id: u16) -> NodeId {
-    NodeId::new((cob_id & 0x7F) as u8).unwrap()
+    NodeId::new((cob_id & 0x7F) as u8)
+        .expect("Should not have failed because the passed raw ID is masked.")
 }
 
 impl CommunicationObject {

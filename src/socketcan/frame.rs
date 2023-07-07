@@ -10,9 +10,9 @@ use crate::frame::{
 use crate::id::CommunicationObject;
 
 pub fn to_socketcan_frame<T: ConvertibleFrame>(frame: T) -> socketcan::CanFrame {
-    let mut buf = [0u8; CAN_MAX_DLEN];
-    let data = frame.set_data(&mut buf);
-    socketcan::CanFrame::new(frame.communication_object(), data)
+    let data = frame.frame_data();
+    assert!(data.len() <= CAN_MAX_DLEN);
+    socketcan::CanFrame::new(frame.communication_object(), data.as_ref())
         .expect("Should have failed only when the data length exceeded `CAN_MAX_DLEN`")
 }
 

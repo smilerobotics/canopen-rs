@@ -63,7 +63,12 @@ impl SdoFrame {
         }
     }
 
-    pub fn new_sdo_write_frame(node_id: NodeId, index: u16, sub_index: u8, data: &[u8]) -> Self {
+    pub fn new_sdo_write_frame(
+        node_id: NodeId,
+        index: u16,
+        sub_index: u8,
+        data: std::vec::Vec<u8>,
+    ) -> Self {
         Self {
             direction: Direction::Rx,
             node_id,
@@ -72,7 +77,7 @@ impl SdoFrame {
             sub_index,
             size: Some(data.len()),
             expedited: true,
-            data: data.into(),
+            data,
         }
     }
 
@@ -215,7 +220,7 @@ mod tests {
 
     #[test]
     fn test_sdo_write_frame() {
-        let frame = SdoFrame::new_sdo_write_frame(1.try_into().unwrap(), 0x1402, 2, &[255]); // Transmission type RxPDO3
+        let frame = SdoFrame::new_sdo_write_frame(1.try_into().unwrap(), 0x1402, 2, vec![255]); // Transmission type RxPDO3
         assert_eq!(
             frame,
             SdoFrame {
@@ -234,7 +239,7 @@ mod tests {
             2.try_into().unwrap(),
             0x1017,
             0,
-            &(1000u16.to_le_bytes()),
+            1000u16.to_le_bytes().into(),
         ); // Producer heartbeat time
         assert_eq!(
             frame,
@@ -254,7 +259,7 @@ mod tests {
             3.try_into().unwrap(),
             0x1200,
             1,
-            &(0x060Au32.to_le_bytes()),
+            0x060Au32.to_le_bytes().into(),
         ); // COB-ID SDO client to server
         assert_eq!(
             frame,

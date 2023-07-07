@@ -313,7 +313,7 @@ mod tests {
             1.try_into().unwrap(),
             0x1402,
             2,
-            &[255],
+            vec![255],
         )); // Transmission type RxPDO3
         assert_eq!(frame.raw_id(), 0x601);
         assert_eq!(
@@ -325,7 +325,7 @@ mod tests {
             2.try_into().unwrap(),
             0x1017,
             0,
-            &(1000u16.to_le_bytes()),
+            1000u16.to_le_bytes().into(),
         )); // Producer heartbeat time
         assert_eq!(frame.raw_id(), 0x602);
         assert_eq!(
@@ -337,7 +337,7 @@ mod tests {
             3.try_into().unwrap(),
             0x1200,
             1,
-            &(0x060Au32.to_le_bytes()),
+            0x060Au32.to_le_bytes().into(),
         )); // COB-ID SDO client to server
         assert_eq!(frame.raw_id(), 0x603);
         assert_eq!(

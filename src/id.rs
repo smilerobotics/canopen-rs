@@ -1,6 +1,6 @@
 use crate::error::{Error, Result};
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct NodeId(u8);
 
 impl NodeId {

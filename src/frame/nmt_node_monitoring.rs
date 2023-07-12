@@ -83,62 +83,83 @@ mod tests {
 
     #[test]
     fn test_nmt_state_from_byte() {
-        assert_eq!(NmtState::from_byte(0x00), Ok(NmtState::BootUp));
-        assert_eq!(NmtState::from_byte(0x01), Err(Error::InvalidNmtState(0x01)));
-        assert_eq!(NmtState::from_byte(0x02), Err(Error::InvalidNmtState(0x02)));
-        assert_eq!(NmtState::from_byte(0x03), Err(Error::InvalidNmtState(0x03)));
-        assert_eq!(NmtState::from_byte(0x04), Ok(NmtState::Stopped));
-        assert_eq!(NmtState::from_byte(0x05), Ok(NmtState::Operational));
-        assert_eq!(NmtState::from_byte(0x06), Err(Error::InvalidNmtState(0x06)));
-        assert_eq!(NmtState::from_byte(0x7E), Err(Error::InvalidNmtState(0x7E)));
-        assert_eq!(NmtState::from_byte(0x7F), Ok(NmtState::PreOperational));
-        assert_eq!(NmtState::from_byte(0x80), Err(Error::InvalidNmtState(0x80)));
-        assert_eq!(NmtState::from_byte(0xFF), Err(Error::InvalidNmtState(0xFF)));
+        assert_eq!(NmtState::from_byte(0x00).unwrap(), NmtState::BootUp);
+        match NmtState::from_byte(0x01).unwrap_err() {
+            Error::InvalidNmtState(0x01) => (),
+            _ => panic!("Error mismatch"),
+        }
+        match NmtState::from_byte(0x02).unwrap_err() {
+            Error::InvalidNmtState(0x02) => (),
+            _ => panic!("Error mismatch"),
+        }
+        match NmtState::from_byte(0x03).unwrap_err() {
+            Error::InvalidNmtState(0x03) => (),
+            _ => panic!("Error mismatch"),
+        }
+        assert_eq!(NmtState::from_byte(0x04).unwrap(), NmtState::Stopped);
+        assert_eq!(NmtState::from_byte(0x05).unwrap(), NmtState::Operational);
+        match NmtState::from_byte(0x06).unwrap_err() {
+            Error::InvalidNmtState(0x06) => (),
+            _ => panic!("Error mismatch"),
+        }
+        match NmtState::from_byte(0x7E).unwrap_err() {
+            Error::InvalidNmtState(0x7E) => (),
+            _ => panic!("Error mismatch"),
+        }
+        assert_eq!(NmtState::from_byte(0x7F).unwrap(), NmtState::PreOperational);
+        match NmtState::from_byte(0x80).unwrap_err() {
+            Error::InvalidNmtState(0x80) => (),
+            _ => panic!("Error mismatch"),
+        }
+        match NmtState::from_byte(0xFF).unwrap_err() {
+            Error::InvalidNmtState(0xFF) => (),
+            _ => panic!("Error mismatch"),
+        }
     }
 
     #[test]
     fn test_from_node_id_bytes() {
         assert_eq!(
-            NmtNodeMonitoringFrame::new_with_bytes(1.try_into().unwrap(), &[0x00]),
-            Ok(NmtNodeMonitoringFrame {
+            NmtNodeMonitoringFrame::new_with_bytes(1.try_into().unwrap(), &[0x00]).unwrap(),
+            NmtNodeMonitoringFrame {
                 node_id: 1.try_into().unwrap(),
                 state: NmtState::BootUp
-            })
+            }
         );
         assert_eq!(
-            NmtNodeMonitoringFrame::new_with_bytes(2.try_into().unwrap(), &[0x04]),
-            Ok(NmtNodeMonitoringFrame {
+            NmtNodeMonitoringFrame::new_with_bytes(2.try_into().unwrap(), &[0x04]).unwrap(),
+            NmtNodeMonitoringFrame {
                 node_id: 2.try_into().unwrap(),
                 state: NmtState::Stopped
-            })
+            }
         );
         assert_eq!(
-            NmtNodeMonitoringFrame::new_with_bytes(3.try_into().unwrap(), &[0x05]),
-            Ok(NmtNodeMonitoringFrame {
+            NmtNodeMonitoringFrame::new_with_bytes(3.try_into().unwrap(), &[0x05]).unwrap(),
+            NmtNodeMonitoringFrame {
                 node_id: 3.try_into().unwrap(),
                 state: NmtState::Operational
-            })
+            }
         );
         assert_eq!(
-            NmtNodeMonitoringFrame::new_with_bytes(4.try_into().unwrap(), &[0x7F]),
-            Ok(NmtNodeMonitoringFrame {
+            NmtNodeMonitoringFrame::new_with_bytes(4.try_into().unwrap(), &[0x7F]).unwrap(),
+            NmtNodeMonitoringFrame {
                 node_id: 4.try_into().unwrap(),
                 state: NmtState::PreOperational
-            })
+            }
         );
 
-        assert_eq!(
-            NmtNodeMonitoringFrame::new_with_bytes(5.try_into().unwrap(), &[0x01]),
-            Err(Error::InvalidNmtState(0x01))
-        );
-        assert_eq!(
-            NmtNodeMonitoringFrame::new_with_bytes(6.try_into().unwrap(), &[0x06]),
-            Err(Error::InvalidNmtState(0x06))
-        );
-        assert_eq!(
-            NmtNodeMonitoringFrame::new_with_bytes(7.try_into().unwrap(), &[0x80]),
-            Err(Error::InvalidNmtState(0x80))
-        );
+        match NmtNodeMonitoringFrame::new_with_bytes(5.try_into().unwrap(), &[0x01]).unwrap_err() {
+            Error::InvalidNmtState(0x01) => (),
+            _ => panic!("Error mismatch"),
+        };
+        match NmtNodeMonitoringFrame::new_with_bytes(6.try_into().unwrap(), &[0x06]).unwrap_err() {
+            Error::InvalidNmtState(0x06) => (),
+            _ => panic!("Error mismatch"),
+        };
+        match NmtNodeMonitoringFrame::new_with_bytes(7.try_into().unwrap(), &[0x80]).unwrap_err() {
+            Error::InvalidNmtState(0x80) => (),
+            _ => panic!("Error mismatch"),
+        };
     }
 
     #[test]

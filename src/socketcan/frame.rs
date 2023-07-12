@@ -109,95 +109,110 @@ mod tests {
 
     #[test]
     fn test_socketcan_frame_to_nmt_node_control_frame() {
-        let frame: Result<CanOpenFrame> =
+        let result: Result<CanOpenFrame> =
             socketcan::CanFrame::new(socketcan::StandardId::new(0x000).unwrap(), &[0x01, 0x00])
                 .unwrap()
                 .try_into();
         assert_eq!(
-            frame,
-            Ok(CanOpenFrame::NmtNodeControlFrame(NmtNodeControlFrame {
+            result.unwrap(),
+            CanOpenFrame::NmtNodeControlFrame(NmtNodeControlFrame {
                 command: NmtCommand::Operational,
                 address: NmtNodeControlAddress::AllNodes
-            }))
+            })
         );
 
-        let frame: Result<CanOpenFrame> =
+        let result: Result<CanOpenFrame> =
             socketcan::CanFrame::new(socketcan::StandardId::new(0x000).unwrap(), &[0x02, 0x01])
                 .unwrap()
                 .try_into();
         assert_eq!(
-            frame,
-            Ok(CanOpenFrame::NmtNodeControlFrame(NmtNodeControlFrame {
+            result.unwrap(),
+            CanOpenFrame::NmtNodeControlFrame(NmtNodeControlFrame {
                 command: NmtCommand::Stopped,
                 address: NmtNodeControlAddress::Node(1.try_into().unwrap())
-            }))
+            })
         );
 
-        let frame: Result<CanOpenFrame> =
+        let result: Result<CanOpenFrame> =
             socketcan::CanFrame::new(socketcan::StandardId::new(0x000).unwrap(), &[0x80, 0x02])
                 .unwrap()
                 .try_into();
         assert_eq!(
-            frame,
-            Ok(CanOpenFrame::NmtNodeControlFrame(NmtNodeControlFrame {
+            result.unwrap(),
+            CanOpenFrame::NmtNodeControlFrame(NmtNodeControlFrame {
                 command: NmtCommand::PreOperational,
                 address: NmtNodeControlAddress::Node(2.try_into().unwrap())
-            }))
+            })
         );
 
-        let frame: Result<CanOpenFrame> =
+        let result: Result<CanOpenFrame> =
             socketcan::CanFrame::new(socketcan::StandardId::new(0x000).unwrap(), &[0x81, 0x03])
                 .unwrap()
                 .try_into();
         assert_eq!(
-            frame,
-            Ok(CanOpenFrame::NmtNodeControlFrame(NmtNodeControlFrame {
+            result.unwrap(),
+            CanOpenFrame::NmtNodeControlFrame(NmtNodeControlFrame {
                 command: NmtCommand::ResetNode,
                 address: NmtNodeControlAddress::Node(3.try_into().unwrap())
-            }))
+            })
         );
 
-        let frame: Result<CanOpenFrame> =
+        let result: Result<CanOpenFrame> =
             socketcan::CanFrame::new(socketcan::StandardId::new(0x000).unwrap(), &[0x82, 0x7F])
                 .unwrap()
                 .try_into();
         assert_eq!(
-            frame,
-            Ok(CanOpenFrame::NmtNodeControlFrame(NmtNodeControlFrame {
+            result.unwrap(),
+            CanOpenFrame::NmtNodeControlFrame(NmtNodeControlFrame {
                 command: NmtCommand::ResetCommunication,
                 address: NmtNodeControlAddress::Node(127.try_into().unwrap())
-            }))
+            })
         );
 
-        let frame: Result<CanOpenFrame> =
+        let result: Result<CanOpenFrame> =
             socketcan::CanFrame::new(socketcan::StandardId::new(0x000).unwrap(), &[0x00, 0x00])
                 .unwrap()
                 .try_into();
-        assert_eq!(frame, Err(Error::InvalidNmtCommand(0)));
+        match result.unwrap_err() {
+            Error::InvalidNmtCommand(0) => (),
+            _ => panic!("Error mismatch"),
+        }
 
-        let frame: Result<CanOpenFrame> =
+        let result: Result<CanOpenFrame> =
             socketcan::CanFrame::new(socketcan::StandardId::new(0x000).unwrap(), &[0x03, 0x00])
                 .unwrap()
                 .try_into();
-        assert_eq!(frame, Err(Error::InvalidNmtCommand(3)));
+        match result.unwrap_err() {
+            Error::InvalidNmtCommand(3) => (),
+            _ => panic!("Error mismatch"),
+        }
 
-        let frame: Result<CanOpenFrame> =
+        let result: Result<CanOpenFrame> =
             socketcan::CanFrame::new(socketcan::StandardId::new(0x000).unwrap(), &[0xFF, 0x00])
                 .unwrap()
                 .try_into();
-        assert_eq!(frame, Err(Error::InvalidNmtCommand(255)));
+        match result.unwrap_err() {
+            Error::InvalidNmtCommand(255) => (),
+            _ => panic!("Error mismatch"),
+        }
 
-        let frame: Result<CanOpenFrame> =
+        let result: Result<CanOpenFrame> =
             socketcan::CanFrame::new(socketcan::StandardId::new(0x000).unwrap(), &[0x01, 0x80])
                 .unwrap()
                 .try_into();
-        assert_eq!(frame, Err(Error::InvalidNodeId(128)));
+        match result.unwrap_err() {
+            Error::InvalidNodeId(128) => (),
+            _ => panic!("Error mismatch"),
+        }
 
-        let frame: Result<CanOpenFrame> =
+        let result: Result<CanOpenFrame> =
             socketcan::CanFrame::new(socketcan::StandardId::new(0x000).unwrap(), &[0x01, 0xFF])
                 .unwrap()
                 .try_into();
-        assert_eq!(frame, Err(Error::InvalidNodeId(255)));
+        match result.unwrap_err() {
+            Error::InvalidNodeId(255) => (),
+            _ => panic!("Error mismatch"),
+        }
     }
 
     #[test]
@@ -209,11 +224,11 @@ mod tests {
 
     #[test]
     fn test_socketcan_frame_to_sync_frame() {
-        let frame: Result<CanOpenFrame> =
+        let result: Result<CanOpenFrame> =
             socketcan::CanFrame::new(socketcan::StandardId::new(0x080).unwrap(), &[])
                 .unwrap()
                 .try_into();
-        assert_eq!(frame, Ok(CanOpenFrame::SyncFrame(SyncFrame)));
+        assert_eq!(result.unwrap(), CanOpenFrame::SyncFrame(SyncFrame));
     }
 
     #[test]
@@ -242,58 +257,64 @@ mod tests {
 
     #[test]
     fn test_socketcan_frame_to_emergency_frame() {
-        let frame: Result<CanOpenFrame> = socketcan::CanFrame::new(
+        let result: Result<CanOpenFrame> = socketcan::CanFrame::new(
             socketcan::StandardId::new(0x081).unwrap(),
             &[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
         )
         .unwrap()
         .try_into();
         assert_eq!(
-            frame,
-            Ok(CanOpenFrame::EmergencyFrame(EmergencyFrame {
+            result.unwrap(),
+            CanOpenFrame::EmergencyFrame(EmergencyFrame {
                 node_id: 1.try_into().unwrap(),
                 error_code: 0x0000,
                 error_register: 0x00
-            }))
+            })
         );
 
-        let frame: Result<CanOpenFrame> = socketcan::CanFrame::new(
+        let result: Result<CanOpenFrame> = socketcan::CanFrame::new(
             socketcan::StandardId::new(0x082).unwrap(),
             &[0x00, 0x10, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00],
         )
         .unwrap()
         .try_into();
         assert_eq!(
-            frame,
-            Ok(CanOpenFrame::EmergencyFrame(EmergencyFrame {
+            result.unwrap(),
+            CanOpenFrame::EmergencyFrame(EmergencyFrame {
                 node_id: 2.try_into().unwrap(),
                 error_code: 0x1000,
                 error_register: 0x01
-            }))
+            })
         );
 
-        let frame: Result<CanOpenFrame> = socketcan::CanFrame::new(
+        let result: Result<CanOpenFrame> = socketcan::CanFrame::new(
             socketcan::StandardId::new(0x0FF).unwrap(),
             &[0x34, 0x12, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00],
         )
         .unwrap()
         .try_into();
         assert_eq!(
-            frame,
-            Ok(CanOpenFrame::EmergencyFrame(EmergencyFrame {
+            result.unwrap(),
+            CanOpenFrame::EmergencyFrame(EmergencyFrame {
                 node_id: 127.try_into().unwrap(),
                 error_code: 0x1234,
                 error_register: 0x56
-            }))
+            })
         );
 
-        let frame: Result<CanOpenFrame> = socketcan::CanFrame::new(
+        let result: Result<CanOpenFrame> = socketcan::CanFrame::new(
             socketcan::StandardId::new(0x081).unwrap(),
             &[0x00, 0x00, 0x00],
         )
         .unwrap()
         .try_into();
-        assert!(frame.is_err());
+        match result.unwrap_err() {
+            Error::InvalidDataLength {
+                length: _,
+                data_type: _,
+            } => (),
+            _ => panic!("Error mismatch"),
+        }
     }
 
     #[test]
@@ -382,15 +403,15 @@ mod tests {
 
     #[test]
     fn test_socketcan_frame_to_sdo_frame() {
-        let frame: Result<CanOpenFrame> = socketcan::CanFrame::new(
+        let result: Result<CanOpenFrame> = socketcan::CanFrame::new(
             socketcan::StandardId::new(0x601).unwrap(),
             &[0x40, 0x18, 0x10, 0x02, 0x00, 0x00, 0x00, 0x00],
         )
         .unwrap()
         .try_into();
         assert_eq!(
-            frame,
-            Ok(CanOpenFrame::SdoFrame(SdoFrame {
+            result.unwrap(),
+            CanOpenFrame::SdoFrame(SdoFrame {
                 direction: Direction::Rx,
                 node_id: 1.try_into().unwrap(),
                 ccs: ClientCommandSpecifier::InitiateUpload,
@@ -399,17 +420,17 @@ mod tests {
                 size: None,
                 expedited: false,
                 data: vec![],
-            }))
+            })
         );
-        let frame: Result<CanOpenFrame> = socketcan::CanFrame::new(
+        let result: Result<CanOpenFrame> = socketcan::CanFrame::new(
             socketcan::StandardId::new(0x601).unwrap(),
             &[0x2F, 0x02, 0x14, 0x02, 0xFF, 0x00, 0x00, 0x00],
         )
         .unwrap()
         .try_into();
         assert_eq!(
-            frame,
-            Ok(CanOpenFrame::SdoFrame(SdoFrame {
+            result.unwrap(),
+            CanOpenFrame::SdoFrame(SdoFrame {
                 direction: Direction::Rx,
                 node_id: 1.try_into().unwrap(),
                 ccs: ClientCommandSpecifier::InitiateDownload,
@@ -418,17 +439,17 @@ mod tests {
                 size: Some(1),
                 expedited: true,
                 data: vec![0xFF],
-            }))
+            })
         );
-        let frame: Result<CanOpenFrame> = socketcan::CanFrame::new(
+        let result: Result<CanOpenFrame> = socketcan::CanFrame::new(
             socketcan::StandardId::new(0x602).unwrap(),
             &[0x2B, 0x17, 0x10, 0x00, 0xE8, 0x03, 0x00, 0x00],
         )
         .unwrap()
         .try_into();
         assert_eq!(
-            frame,
-            Ok(CanOpenFrame::SdoFrame(SdoFrame {
+            result.unwrap(),
+            CanOpenFrame::SdoFrame(SdoFrame {
                 direction: Direction::Rx,
                 node_id: 2.try_into().unwrap(),
                 ccs: ClientCommandSpecifier::InitiateDownload,
@@ -437,17 +458,17 @@ mod tests {
                 size: Some(2),
                 expedited: true,
                 data: vec![0xE8, 0x03],
-            }))
+            })
         );
-        let frame: Result<CanOpenFrame> = socketcan::CanFrame::new(
+        let result: Result<CanOpenFrame> = socketcan::CanFrame::new(
             socketcan::StandardId::new(0x603).unwrap(),
             &[0x23, 0x00, 0x12, 0x01, 0x0A, 0x06, 0x00, 0x00],
         )
         .unwrap()
         .try_into();
         assert_eq!(
-            frame,
-            Ok(CanOpenFrame::SdoFrame(SdoFrame {
+            result.unwrap(),
+            CanOpenFrame::SdoFrame(SdoFrame {
                 direction: Direction::Rx,
                 node_id: 3.try_into().unwrap(),
                 ccs: ClientCommandSpecifier::InitiateDownload,
@@ -456,17 +477,17 @@ mod tests {
                 size: Some(4),
                 expedited: true,
                 data: vec![0x0A, 0x06, 0x00, 0x00],
-            }))
+            })
         );
-        let frame: Result<CanOpenFrame> = socketcan::CanFrame::new(
+        let result: Result<CanOpenFrame> = socketcan::CanFrame::new(
             socketcan::StandardId::new(0x584).unwrap(),
             &[0x43, 0x00, 0x10, 0x00, 0x92, 0x01, 0x02, 0x00],
         )
         .unwrap()
         .try_into();
         assert_eq!(
-            frame,
-            Ok(CanOpenFrame::SdoFrame(SdoFrame {
+            result.unwrap(),
+            CanOpenFrame::SdoFrame(SdoFrame {
                 direction: Direction::Tx,
                 node_id: 4.try_into().unwrap(),
                 ccs: ClientCommandSpecifier::InitiateUpload,
@@ -475,17 +496,17 @@ mod tests {
                 size: Some(4),
                 expedited: true,
                 data: vec![0x92, 0x01, 0x02, 0x00],
-            }))
+            })
         );
-        let frame: Result<CanOpenFrame> = socketcan::CanFrame::new(
+        let result: Result<CanOpenFrame> = socketcan::CanFrame::new(
             socketcan::StandardId::new(0x585).unwrap(),
             &[0x80, 0x00, 0x10, 0x00, 0x02, 0x00, 0x01, 0x06],
         )
         .unwrap()
         .try_into();
         assert_eq!(
-            frame,
-            Ok(CanOpenFrame::SdoFrame(SdoFrame {
+            result.unwrap(),
+            CanOpenFrame::SdoFrame(SdoFrame {
                 direction: Direction::Tx,
                 node_id: 5.try_into().unwrap(),
                 ccs: ClientCommandSpecifier::AbortTransfer,
@@ -494,7 +515,7 @@ mod tests {
                 size: None,
                 expedited: false,
                 data: vec![0x02, 0x00, 0x01, 0x06],
-            }))
+            })
         );
     }
 
@@ -531,78 +552,79 @@ mod tests {
 
     #[test]
     fn test_socketcan_frame_to_nmt_node_monitoring_frame() {
-        let frame: Result<CanOpenFrame> =
+        let result: Result<CanOpenFrame> =
             socketcan::CanFrame::new(socketcan::StandardId::new(0x701).unwrap(), &[0x00])
                 .unwrap()
                 .try_into();
         assert_eq!(
-            frame,
-            Ok(CanOpenFrame::NmtNodeMonitoringFrame(
-                NmtNodeMonitoringFrame {
-                    node_id: 1.try_into().unwrap(),
-                    state: NmtState::BootUp,
-                }
-            ))
+            result.unwrap(),
+            CanOpenFrame::NmtNodeMonitoringFrame(NmtNodeMonitoringFrame {
+                node_id: 1.try_into().unwrap(),
+                state: NmtState::BootUp,
+            })
         );
 
-        let frame: Result<CanOpenFrame> =
+        let result: Result<CanOpenFrame> =
             socketcan::CanFrame::new(socketcan::StandardId::new(0x702).unwrap(), &[0x04])
                 .unwrap()
                 .try_into();
         assert_eq!(
-            frame,
-            Ok(CanOpenFrame::NmtNodeMonitoringFrame(
-                NmtNodeMonitoringFrame {
-                    node_id: 2.try_into().unwrap(),
-                    state: NmtState::Stopped,
-                }
-            ))
+            result.unwrap(),
+            CanOpenFrame::NmtNodeMonitoringFrame(NmtNodeMonitoringFrame {
+                node_id: 2.try_into().unwrap(),
+                state: NmtState::Stopped,
+            })
         );
 
-        let frame: Result<CanOpenFrame> =
+        let result: Result<CanOpenFrame> =
             socketcan::CanFrame::new(socketcan::StandardId::new(0x703).unwrap(), &[0x05])
                 .unwrap()
                 .try_into();
         assert_eq!(
-            frame,
-            Ok(CanOpenFrame::NmtNodeMonitoringFrame(
-                NmtNodeMonitoringFrame {
-                    node_id: 3.try_into().unwrap(),
-                    state: NmtState::Operational,
-                }
-            ))
+            result.unwrap(),
+            CanOpenFrame::NmtNodeMonitoringFrame(NmtNodeMonitoringFrame {
+                node_id: 3.try_into().unwrap(),
+                state: NmtState::Operational,
+            })
         );
 
-        let frame: Result<CanOpenFrame> =
+        let result: Result<CanOpenFrame> =
             socketcan::CanFrame::new(socketcan::StandardId::new(0x704).unwrap(), &[0x7F])
                 .unwrap()
                 .try_into();
         assert_eq!(
-            frame,
-            Ok(CanOpenFrame::NmtNodeMonitoringFrame(
-                NmtNodeMonitoringFrame {
-                    node_id: 4.try_into().unwrap(),
-                    state: NmtState::PreOperational,
-                }
-            ))
+            result.unwrap(),
+            CanOpenFrame::NmtNodeMonitoringFrame(NmtNodeMonitoringFrame {
+                node_id: 4.try_into().unwrap(),
+                state: NmtState::PreOperational,
+            })
         );
 
-        let frame: Result<CanOpenFrame> =
+        let result: Result<CanOpenFrame> =
             socketcan::CanFrame::new(socketcan::StandardId::new(0x705).unwrap(), &[0x01])
                 .unwrap()
                 .try_into();
-        assert_eq!(frame, Err(Error::InvalidNmtState(0x01)));
+        match result.unwrap_err() {
+            Error::InvalidNmtState(0x01) => (),
+            _ => panic!("Error mismatch"),
+        }
 
-        let frame: Result<CanOpenFrame> =
+        let result: Result<CanOpenFrame> =
             socketcan::CanFrame::new(socketcan::StandardId::new(0x706).unwrap(), &[0x06])
                 .unwrap()
                 .try_into();
-        assert_eq!(frame, Err(Error::InvalidNmtState(0x06)));
+        match result.unwrap_err() {
+            Error::InvalidNmtState(0x06) => (),
+            _ => panic!("Error mismatch"),
+        }
 
-        let frame: Result<CanOpenFrame> =
+        let result: Result<CanOpenFrame> =
             socketcan::CanFrame::new(socketcan::StandardId::new(0x708).unwrap(), &[0x80])
                 .unwrap()
                 .try_into();
-        assert_eq!(frame, Err(Error::InvalidNmtState(0x80)));
+        match result.unwrap_err() {
+            Error::InvalidNmtState(0x80) => (),
+            _ => panic!("Error mismatch"),
+        }
     }
 }

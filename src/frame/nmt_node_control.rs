@@ -112,22 +112,32 @@ mod tests {
 
     #[test]
     fn test_nmt_command_from_byte() {
-        let command = NmtCommand::from_byte(0x01);
-        assert_eq!(command, Ok(NmtCommand::Operational));
-        let command = NmtCommand::from_byte(0x02);
-        assert_eq!(command, Ok(NmtCommand::Stopped));
-        let command = NmtCommand::from_byte(0x80);
-        assert_eq!(command, Ok(NmtCommand::PreOperational));
-        let command = NmtCommand::from_byte(0x81);
-        assert_eq!(command, Ok(NmtCommand::ResetNode));
-        let command = NmtCommand::from_byte(0x82);
-        assert_eq!(command, Ok(NmtCommand::ResetCommunication));
-        let command = NmtCommand::from_byte(0x00);
-        assert_eq!(command, Err(Error::InvalidNmtCommand(0x00)));
-        let command = NmtCommand::from_byte(0x03);
-        assert_eq!(command, Err(Error::InvalidNmtCommand(0x03)));
-        let command = NmtCommand::from_byte(0xFF);
-        assert_eq!(command, Err(Error::InvalidNmtCommand(0xFF)));
+        assert_eq!(
+            NmtCommand::from_byte(0x01).unwrap(),
+            NmtCommand::Operational
+        );
+        assert_eq!(NmtCommand::from_byte(0x02).unwrap(), NmtCommand::Stopped);
+        assert_eq!(
+            NmtCommand::from_byte(0x80).unwrap(),
+            NmtCommand::PreOperational
+        );
+        assert_eq!(NmtCommand::from_byte(0x81).unwrap(), NmtCommand::ResetNode);
+        assert_eq!(
+            NmtCommand::from_byte(0x82).unwrap(),
+            NmtCommand::ResetCommunication
+        );
+        match NmtCommand::from_byte(0x00).unwrap_err() {
+            Error::InvalidNmtCommand(0x00) => (),
+            _ => panic!("Error mismatch"),
+        }
+        match NmtCommand::from_byte(0x03).unwrap_err() {
+            Error::InvalidNmtCommand(0x03) => (),
+            _ => panic!("Error mismatch"),
+        }
+        match NmtCommand::from_byte(0xFF).unwrap_err() {
+            Error::InvalidNmtCommand(0xFF) => (),
+            _ => panic!("Error mismatch"),
+        }
     }
 
     #[test]
@@ -145,76 +155,85 @@ mod tests {
 
     #[test]
     fn test_nmt_node_control_address_from_byte() {
-        let address = NmtNodeControlAddress::from_byte(0x00);
-        assert_eq!(address, Ok(NmtNodeControlAddress::AllNodes));
-        let address = NmtNodeControlAddress::from_byte(0x01);
         assert_eq!(
-            address,
-            Ok(NmtNodeControlAddress::Node(1.try_into().unwrap()))
+            NmtNodeControlAddress::from_byte(0x00).unwrap(),
+            NmtNodeControlAddress::AllNodes
         );
-        let address = NmtNodeControlAddress::from_byte(0x7F);
         assert_eq!(
-            address,
-            Ok(NmtNodeControlAddress::Node(127.try_into().unwrap()))
+            NmtNodeControlAddress::from_byte(0x01).unwrap(),
+            NmtNodeControlAddress::Node(1.try_into().unwrap())
         );
-        let address = NmtNodeControlAddress::from_byte(0x80);
-        assert_eq!(address, Err(Error::InvalidNodeId(128)));
-        let address = NmtNodeControlAddress::from_byte(0xFF);
-        assert_eq!(address, Err(Error::InvalidNodeId(255)));
+        assert_eq!(
+            NmtNodeControlAddress::from_byte(0x7F).unwrap(),
+            NmtNodeControlAddress::Node(127.try_into().unwrap())
+        );
+        match NmtNodeControlAddress::from_byte(0x80).unwrap_err() {
+            Error::InvalidNodeId(128) => (),
+            _ => panic!("Error mismatch"),
+        }
+        match NmtNodeControlAddress::from_byte(0xFF).unwrap_err() {
+            Error::InvalidNodeId(255) => (),
+            _ => panic!("Error mismatch"),
+        }
     }
 
     #[test]
     fn test_from_bytes() {
-        let frame = NmtNodeControlFrame::new_with_bytes(&[0x01, 0x00]);
         assert_eq!(
-            frame,
-            Ok(NmtNodeControlFrame {
+            NmtNodeControlFrame::new_with_bytes(&[0x01, 0x00]).unwrap(),
+            NmtNodeControlFrame {
                 command: NmtCommand::Operational,
                 address: NmtNodeControlAddress::AllNodes
-            })
+            }
         );
-        let frame = NmtNodeControlFrame::new_with_bytes(&[0x02, 0x01]);
         assert_eq!(
-            frame,
-            Ok(NmtNodeControlFrame {
+            NmtNodeControlFrame::new_with_bytes(&[0x02, 0x01]).unwrap(),
+            NmtNodeControlFrame {
                 command: NmtCommand::Stopped,
                 address: NmtNodeControlAddress::Node(1.try_into().unwrap()),
-            })
+            }
         );
-        let frame = NmtNodeControlFrame::new_with_bytes(&[0x80, 0x02]);
         assert_eq!(
-            frame,
-            Ok(NmtNodeControlFrame {
+            NmtNodeControlFrame::new_with_bytes(&[0x80, 0x02]).unwrap(),
+            NmtNodeControlFrame {
                 command: NmtCommand::PreOperational,
                 address: NmtNodeControlAddress::Node(2.try_into().unwrap()),
-            })
+            }
         );
-        let frame = NmtNodeControlFrame::new_with_bytes(&[0x81, 0x03]);
         assert_eq!(
-            frame,
-            Ok(NmtNodeControlFrame {
+            NmtNodeControlFrame::new_with_bytes(&[0x81, 0x03]).unwrap(),
+            NmtNodeControlFrame {
                 command: NmtCommand::ResetNode,
                 address: NmtNodeControlAddress::Node(3.try_into().unwrap()),
-            })
+            }
         );
-        let frame = NmtNodeControlFrame::new_with_bytes(&[0x82, 0x7F]);
         assert_eq!(
-            frame,
-            Ok(NmtNodeControlFrame {
+            NmtNodeControlFrame::new_with_bytes(&[0x82, 0x7F]).unwrap(),
+            NmtNodeControlFrame {
                 command: NmtCommand::ResetCommunication,
                 address: NmtNodeControlAddress::Node(127.try_into().unwrap()),
-            })
+            }
         );
-        let frame = NmtNodeControlFrame::new_with_bytes(&[0x00, 0x00]);
-        assert_eq!(frame, Err(Error::InvalidNmtCommand(0)));
-        let frame = NmtNodeControlFrame::new_with_bytes(&[0x03, 0x00]);
-        assert_eq!(frame, Err(Error::InvalidNmtCommand(3)));
-        let frame = NmtNodeControlFrame::new_with_bytes(&[0xFF, 0x00]);
-        assert_eq!(frame, Err(Error::InvalidNmtCommand(255)));
-        let frame = NmtNodeControlFrame::new_with_bytes(&[0x01, 0x80]);
-        assert_eq!(frame, Err(Error::InvalidNodeId(128)));
-        let frame = NmtNodeControlFrame::new_with_bytes(&[0x01, 0xFF]);
-        assert_eq!(frame, Err(Error::InvalidNodeId(255)));
+        match NmtNodeControlFrame::new_with_bytes(&[0x00, 0x00]).unwrap_err() {
+            Error::InvalidNmtCommand(0) => (),
+            _ => panic!("Error mismatch"),
+        }
+        match NmtNodeControlFrame::new_with_bytes(&[0x03, 0x00]).unwrap_err() {
+            Error::InvalidNmtCommand(3) => (),
+            _ => panic!("Error mismatch"),
+        }
+        match NmtNodeControlFrame::new_with_bytes(&[0xFF, 0x00]).unwrap_err() {
+            Error::InvalidNmtCommand(255) => (),
+            _ => panic!("Error mismatch"),
+        }
+        match NmtNodeControlFrame::new_with_bytes(&[0x01, 0x80]).unwrap_err() {
+            Error::InvalidNodeId(128) => (),
+            _ => panic!("Error mismatch"),
+        }
+        match NmtNodeControlFrame::new_with_bytes(&[0x01, 0xFF]).unwrap_err() {
+            Error::InvalidNodeId(255) => (),
+            _ => panic!("Error mismatch"),
+        }
     }
 
     #[test]

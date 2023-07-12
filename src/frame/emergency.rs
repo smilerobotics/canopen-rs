@@ -62,42 +62,57 @@ mod tests {
 
     #[test]
     fn test_from_node_id_bytes() {
+        let result = EmergencyFrame::new_with_bytes(
+            1.try_into().unwrap(),
+            &[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+        );
+        assert!(result.is_ok());
         assert_eq!(
-            EmergencyFrame::new_with_bytes(
-                1.try_into().unwrap(),
-                &[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-            ),
-            Ok(EmergencyFrame {
+            result.unwrap(),
+            EmergencyFrame {
                 node_id: 1.try_into().unwrap(),
                 error_code: 0x0000,
                 error_register: 0x00
-            })
+            }
         );
+
+        let result = EmergencyFrame::new_with_bytes(
+            2.try_into().unwrap(),
+            &[0x00, 0x10, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00],
+        );
+        assert!(result.is_ok());
         assert_eq!(
-            EmergencyFrame::new_with_bytes(
-                2.try_into().unwrap(),
-                &[0x00, 0x10, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00]
-            ),
-            Ok(EmergencyFrame {
+            result.unwrap(),
+            EmergencyFrame {
                 node_id: 2.try_into().unwrap(),
                 error_code: 0x1000,
                 error_register: 0x01
-            })
+            }
         );
+
+        let result = EmergencyFrame::new_with_bytes(
+            127.try_into().unwrap(),
+            &[0x34, 0x12, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00],
+        );
+        assert!(result.is_ok());
         assert_eq!(
-            EmergencyFrame::new_with_bytes(
-                127.try_into().unwrap(),
-                &[0x34, 0x12, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00]
-            ),
-            Ok(EmergencyFrame {
+            result.unwrap(),
+            EmergencyFrame {
                 node_id: 127.try_into().unwrap(),
                 error_code: 0x1234,
                 error_register: 0x56
-            })
+            }
         );
-        assert!(
-            EmergencyFrame::new_with_bytes(1.try_into().unwrap(), &[0x00, 0x00, 0x00]).is_err()
-        );
+
+        let result = EmergencyFrame::new_with_bytes(1.try_into().unwrap(), &[0x00, 0x00, 0x00]);
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            Error::InvalidDataLength {
+                length: _,
+                data_type: _,
+            } => (),
+            _ => panic!("Error kind mismatch"),
+        }
     }
 
     #[test]

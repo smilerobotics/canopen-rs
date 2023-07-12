@@ -119,28 +119,41 @@ mod tests {
 
     #[test]
     fn test_node_id_new() {
-        assert_eq!(NodeId::new(1), Ok(NodeId(1)));
-        assert_eq!(NodeId::new(2), Ok(NodeId(2)));
-        assert_eq!(NodeId::new(3), Ok(NodeId(3)));
-        assert_eq!(NodeId::new(127), Ok(NodeId(127)));
-        assert!(NodeId::new(128).is_err());
-        assert!(NodeId::new(255).is_err());
+        assert_eq!(NodeId::new(1).unwrap(), NodeId(1));
+        assert_eq!(NodeId::new(2).unwrap(), NodeId(2));
+        assert_eq!(NodeId::new(3).unwrap(), NodeId(3));
+        assert_eq!(NodeId::new(127).unwrap(), NodeId(127));
+        match NodeId::new(128).unwrap_err() {
+            Error::InvalidNodeId(128) => (),
+            _ => panic!("Error mismatch"),
+        }
+        match NodeId::new(255).unwrap_err() {
+            Error::InvalidNodeId(255) => (),
+            _ => panic!("Error mismatch"),
+        }
     }
 
     #[test]
     fn test_node_id_try_into() {
-        let node_id: Result<NodeId> = 1.try_into();
-        assert_eq!(node_id, Ok(NodeId(1)));
-        let node_id: Result<NodeId> = 2.try_into();
-        assert_eq!(node_id, Ok(NodeId(2)));
-        let node_id: Result<NodeId> = 3.try_into();
-        assert_eq!(node_id, Ok(NodeId(3)));
-        let node_id: Result<NodeId> = 127.try_into();
-        assert_eq!(node_id, Ok(NodeId(127)));
-        let node_id: Result<NodeId> = 128.try_into();
-        assert!(node_id.is_err());
-        let node_id: Result<NodeId> = 255.try_into();
-        assert!(node_id.is_err());
+        let result: Result<NodeId> = 1.try_into();
+        assert_eq!(result.unwrap(), NodeId(1));
+        let result: Result<NodeId> = 2.try_into();
+        assert_eq!(result.unwrap(), NodeId(2));
+        let result: Result<NodeId> = 3.try_into();
+        assert_eq!(result.unwrap(), NodeId(3));
+        let result: Result<NodeId> = 127.try_into();
+        assert_eq!(result.unwrap(), NodeId(127));
+
+        let result: Result<NodeId> = 128.try_into();
+        match result.unwrap_err() {
+            Error::InvalidNodeId(128) => (),
+            _ => panic!("Error mismatch"),
+        }
+        let result: Result<NodeId> = 255.try_into();
+        match result.unwrap_err() {
+            Error::InvalidNodeId(255) => (),
+            _ => panic!("Error mismatch"),
+        }
     }
 
     #[test]
@@ -192,137 +205,173 @@ mod tests {
 
     #[test]
     fn test_new() {
-        let cob = CommunicationObject::new(0x000);
-        assert_eq!(cob, Ok(CommunicationObject::NmtNodeControl));
-        let cob = CommunicationObject::new(0x001);
-        assert_eq!(cob, Ok(CommunicationObject::GlobalFailsafeCommand));
-        let cob = CommunicationObject::new(0x080);
-        assert_eq!(cob, Ok(CommunicationObject::Sync));
-        let cob = CommunicationObject::new(0x81);
         assert_eq!(
-            cob,
-            Ok(CommunicationObject::Emergency(1.try_into().unwrap()))
+            CommunicationObject::new(0x000).unwrap(),
+            CommunicationObject::NmtNodeControl
         );
-        let cob = CommunicationObject::new(0x08F);
         assert_eq!(
-            cob,
-            Ok(CommunicationObject::Emergency(15.try_into().unwrap()))
+            CommunicationObject::new(0x001).unwrap(),
+            CommunicationObject::GlobalFailsafeCommand
         );
-        let cob = CommunicationObject::new(0x0FF);
         assert_eq!(
-            cob,
-            Ok(CommunicationObject::Emergency(127.try_into().unwrap()))
+            CommunicationObject::new(0x080).unwrap(),
+            CommunicationObject::Sync
         );
-        let cob = CommunicationObject::new(0x100);
-        assert_eq!(cob, Ok(CommunicationObject::TimeStamp));
-        let cob = CommunicationObject::new(0x181);
-        assert_eq!(cob, Ok(CommunicationObject::TxPdo1(1.try_into().unwrap())));
-        let cob = CommunicationObject::new(0x18F);
-        assert_eq!(cob, Ok(CommunicationObject::TxPdo1(15.try_into().unwrap())));
-        let cob = CommunicationObject::new(0x1FF);
         assert_eq!(
-            cob,
-            Ok(CommunicationObject::TxPdo1(127.try_into().unwrap()))
+            CommunicationObject::new(0x81).unwrap(),
+            CommunicationObject::Emergency(1.try_into().unwrap())
         );
-        let cob = CommunicationObject::new(0x201);
-        assert_eq!(cob, Ok(CommunicationObject::RxPdo1(1.try_into().unwrap())));
-        let cob = CommunicationObject::new(0x20F);
-        assert_eq!(cob, Ok(CommunicationObject::RxPdo1(15.try_into().unwrap())));
-        let cob = CommunicationObject::new(0x27F);
         assert_eq!(
-            cob,
-            Ok(CommunicationObject::RxPdo1(127.try_into().unwrap()))
+            CommunicationObject::new(0x08F).unwrap(),
+            CommunicationObject::Emergency(15.try_into().unwrap())
         );
-        let cob = CommunicationObject::new(0x281);
-        assert_eq!(cob, Ok(CommunicationObject::TxPdo2(1.try_into().unwrap())));
-        let cob = CommunicationObject::new(0x28F);
-        assert_eq!(cob, Ok(CommunicationObject::TxPdo2(15.try_into().unwrap())));
-        let cob = CommunicationObject::new(0x2FF);
         assert_eq!(
-            cob,
-            Ok(CommunicationObject::TxPdo2(127.try_into().unwrap()))
+            CommunicationObject::new(0x0FF).unwrap(),
+            CommunicationObject::Emergency(127.try_into().unwrap())
         );
-        let cob = CommunicationObject::new(0x301);
-        assert_eq!(cob, Ok(CommunicationObject::RxPdo2(1.try_into().unwrap())));
-        let cob = CommunicationObject::new(0x30F);
-        assert_eq!(cob, Ok(CommunicationObject::RxPdo2(15.try_into().unwrap())));
-        let cob = CommunicationObject::new(0x37F);
         assert_eq!(
-            cob,
-            Ok(CommunicationObject::RxPdo2(127.try_into().unwrap()))
+            CommunicationObject::new(0x100).unwrap(),
+            CommunicationObject::TimeStamp
         );
-        let cob = CommunicationObject::new(0x381);
-        assert_eq!(cob, Ok(CommunicationObject::TxPdo3(1.try_into().unwrap())));
-        let cob = CommunicationObject::new(0x38F);
-        assert_eq!(cob, Ok(CommunicationObject::TxPdo3(15.try_into().unwrap())));
-        let cob = CommunicationObject::new(0x3FF);
         assert_eq!(
-            cob,
-            Ok(CommunicationObject::TxPdo3(127.try_into().unwrap()))
+            CommunicationObject::new(0x181).unwrap(),
+            CommunicationObject::TxPdo1(1.try_into().unwrap())
         );
-        let cob = CommunicationObject::new(0x401);
-        assert_eq!(cob, Ok(CommunicationObject::RxPdo3(1.try_into().unwrap())));
-        let cob = CommunicationObject::new(0x40F);
-        assert_eq!(cob, Ok(CommunicationObject::RxPdo3(15.try_into().unwrap())));
-        let cob = CommunicationObject::new(0x47F);
         assert_eq!(
-            cob,
-            Ok(CommunicationObject::RxPdo3(127.try_into().unwrap()))
+            CommunicationObject::new(0x18F).unwrap(),
+            CommunicationObject::TxPdo1(15.try_into().unwrap())
         );
-        let cob = CommunicationObject::new(0x481);
-        assert_eq!(cob, Ok(CommunicationObject::TxPdo4(1.try_into().unwrap())));
-        let cob = CommunicationObject::new(0x48F);
-        assert_eq!(cob, Ok(CommunicationObject::TxPdo4(15.try_into().unwrap())));
-        let cob = CommunicationObject::new(0x4FF);
         assert_eq!(
-            cob,
-            Ok(CommunicationObject::TxPdo4(127.try_into().unwrap()))
+            CommunicationObject::new(0x1FF).unwrap(),
+            CommunicationObject::TxPdo1(127.try_into().unwrap())
         );
-        let cob = CommunicationObject::new(0x501);
-        assert_eq!(cob, Ok(CommunicationObject::RxPdo4(1.try_into().unwrap())));
-        let cob = CommunicationObject::new(0x50F);
-        assert_eq!(cob, Ok(CommunicationObject::RxPdo4(15.try_into().unwrap())));
-        let cob = CommunicationObject::new(0x57F);
         assert_eq!(
-            cob,
-            Ok(CommunicationObject::RxPdo4(127.try_into().unwrap()))
+            CommunicationObject::new(0x201).unwrap(),
+            CommunicationObject::RxPdo1(1.try_into().unwrap())
         );
-        let cob = CommunicationObject::new(0x581);
-        assert_eq!(cob, Ok(CommunicationObject::TxSdo(1.try_into().unwrap())));
-        let cob = CommunicationObject::new(0x58F);
-        assert_eq!(cob, Ok(CommunicationObject::TxSdo(15.try_into().unwrap())));
-        let cob = CommunicationObject::new(0x5FF);
-        assert_eq!(cob, Ok(CommunicationObject::TxSdo(127.try_into().unwrap())));
-        let cob = CommunicationObject::new(0x601);
-        assert_eq!(cob, Ok(CommunicationObject::RxSdo(1.try_into().unwrap())));
-        let cob = CommunicationObject::new(0x60F);
-        assert_eq!(cob, Ok(CommunicationObject::RxSdo(15.try_into().unwrap())));
-        let cob = CommunicationObject::new(0x67F);
-        assert_eq!(cob, Ok(CommunicationObject::RxSdo(127.try_into().unwrap())));
-        let cob = CommunicationObject::new(0x701);
         assert_eq!(
-            cob,
-            Ok(CommunicationObject::NmtNodeMonitoring(
-                1.try_into().unwrap()
-            ))
+            CommunicationObject::new(0x20F).unwrap(),
+            CommunicationObject::RxPdo1(15.try_into().unwrap())
         );
-        let cob = CommunicationObject::new(0x70F);
         assert_eq!(
-            cob,
-            Ok(CommunicationObject::NmtNodeMonitoring(
-                15.try_into().unwrap()
-            ))
+            CommunicationObject::new(0x27F).unwrap(),
+            CommunicationObject::RxPdo1(127.try_into().unwrap())
         );
-        let cob = CommunicationObject::new(0x77F);
         assert_eq!(
-            cob,
-            Ok(CommunicationObject::NmtNodeMonitoring(
-                127.try_into().unwrap()
-            ))
+            CommunicationObject::new(0x281).unwrap(),
+            CommunicationObject::TxPdo2(1.try_into().unwrap())
         );
-        let cob = CommunicationObject::new(0x7E4);
-        assert_eq!(cob, Ok(CommunicationObject::TxLss));
-        let cob = CommunicationObject::new(0x7E5);
-        assert_eq!(cob, Ok(CommunicationObject::RxLss));
+        assert_eq!(
+            CommunicationObject::new(0x28F).unwrap(),
+            CommunicationObject::TxPdo2(15.try_into().unwrap())
+        );
+        assert_eq!(
+            CommunicationObject::new(0x2FF).unwrap(),
+            CommunicationObject::TxPdo2(127.try_into().unwrap())
+        );
+        assert_eq!(
+            CommunicationObject::new(0x301).unwrap(),
+            CommunicationObject::RxPdo2(1.try_into().unwrap())
+        );
+        assert_eq!(
+            CommunicationObject::new(0x30F).unwrap(),
+            CommunicationObject::RxPdo2(15.try_into().unwrap())
+        );
+        assert_eq!(
+            CommunicationObject::new(0x37F).unwrap(),
+            CommunicationObject::RxPdo2(127.try_into().unwrap())
+        );
+        assert_eq!(
+            CommunicationObject::new(0x381).unwrap(),
+            CommunicationObject::TxPdo3(1.try_into().unwrap())
+        );
+        assert_eq!(
+            CommunicationObject::new(0x38F).unwrap(),
+            CommunicationObject::TxPdo3(15.try_into().unwrap())
+        );
+        assert_eq!(
+            CommunicationObject::new(0x3FF).unwrap(),
+            CommunicationObject::TxPdo3(127.try_into().unwrap())
+        );
+        assert_eq!(
+            CommunicationObject::new(0x401).unwrap(),
+            CommunicationObject::RxPdo3(1.try_into().unwrap())
+        );
+        assert_eq!(
+            CommunicationObject::new(0x40F).unwrap(),
+            CommunicationObject::RxPdo3(15.try_into().unwrap())
+        );
+        assert_eq!(
+            CommunicationObject::new(0x47F).unwrap(),
+            CommunicationObject::RxPdo3(127.try_into().unwrap())
+        );
+        assert_eq!(
+            CommunicationObject::new(0x481).unwrap(),
+            CommunicationObject::TxPdo4(1.try_into().unwrap())
+        );
+        assert_eq!(
+            CommunicationObject::new(0x48F).unwrap(),
+            CommunicationObject::TxPdo4(15.try_into().unwrap())
+        );
+        assert_eq!(
+            CommunicationObject::new(0x4FF).unwrap(),
+            CommunicationObject::TxPdo4(127.try_into().unwrap())
+        );
+        assert_eq!(
+            CommunicationObject::new(0x501).unwrap(),
+            CommunicationObject::RxPdo4(1.try_into().unwrap())
+        );
+        assert_eq!(
+            CommunicationObject::new(0x50F).unwrap(),
+            CommunicationObject::RxPdo4(15.try_into().unwrap())
+        );
+        assert_eq!(
+            CommunicationObject::new(0x57F).unwrap(),
+            CommunicationObject::RxPdo4(127.try_into().unwrap())
+        );
+        assert_eq!(
+            CommunicationObject::new(0x581).unwrap(),
+            CommunicationObject::TxSdo(1.try_into().unwrap())
+        );
+        assert_eq!(
+            CommunicationObject::new(0x58F).unwrap(),
+            CommunicationObject::TxSdo(15.try_into().unwrap())
+        );
+        assert_eq!(
+            CommunicationObject::new(0x5FF).unwrap(),
+            CommunicationObject::TxSdo(127.try_into().unwrap())
+        );
+        assert_eq!(
+            CommunicationObject::new(0x601).unwrap(),
+            CommunicationObject::RxSdo(1.try_into().unwrap())
+        );
+        assert_eq!(
+            CommunicationObject::new(0x60F).unwrap(),
+            CommunicationObject::RxSdo(15.try_into().unwrap())
+        );
+        assert_eq!(
+            CommunicationObject::new(0x67F).unwrap(),
+            CommunicationObject::RxSdo(127.try_into().unwrap())
+        );
+        assert_eq!(
+            CommunicationObject::new(0x701).unwrap(),
+            CommunicationObject::NmtNodeMonitoring(1.try_into().unwrap())
+        );
+        assert_eq!(
+            CommunicationObject::new(0x70F).unwrap(),
+            CommunicationObject::NmtNodeMonitoring(15.try_into().unwrap())
+        );
+        assert_eq!(
+            CommunicationObject::new(0x77F).unwrap(),
+            CommunicationObject::NmtNodeMonitoring(127.try_into().unwrap())
+        );
+        assert_eq!(
+            CommunicationObject::new(0x7E4).unwrap(),
+            CommunicationObject::TxLss
+        );
+        assert_eq!(
+            CommunicationObject::new(0x7E5).unwrap(),
+            CommunicationObject::RxLss
+        );
     }
 }

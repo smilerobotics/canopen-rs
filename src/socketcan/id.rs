@@ -120,26 +120,32 @@ mod tests {
 
     #[test]
     fn test_socketcan_id_into_cob() {
-        let cob: Result<CommunicationObject> =
+        let result: Result<CommunicationObject> =
             socketcan::Id::Standard(socketcan::StandardId::new(0x000).unwrap()).try_into();
-        assert_eq!(cob, Ok(CommunicationObject::NmtNodeControl));
-        let cob: Result<CommunicationObject> =
+        assert_eq!(result.unwrap(), CommunicationObject::NmtNodeControl);
+        let result: Result<CommunicationObject> =
             socketcan::Id::Standard(socketcan::StandardId::new(0x001).unwrap()).try_into();
-        assert_eq!(cob, Ok(CommunicationObject::GlobalFailsafeCommand));
-        let cob: Result<CommunicationObject> =
+        assert_eq!(result.unwrap(), CommunicationObject::GlobalFailsafeCommand);
+        let result: Result<CommunicationObject> =
             socketcan::Id::Standard(socketcan::StandardId::new(0x080).unwrap()).try_into();
-        assert_eq!(cob, Ok(CommunicationObject::Sync));
-        let cob: Result<CommunicationObject> =
+        assert_eq!(result.unwrap(), CommunicationObject::Sync);
+        let result: Result<CommunicationObject> =
             socketcan::Id::Standard(socketcan::StandardId::new(0x081).unwrap()).try_into();
         assert_eq!(
-            cob,
-            Ok(CommunicationObject::Emergency(1.try_into().unwrap()))
+            result.unwrap(),
+            CommunicationObject::Emergency(1.try_into().unwrap())
         );
-        let cob: Result<CommunicationObject> =
+        let result: Result<CommunicationObject> =
             socketcan::Id::Standard(socketcan::StandardId::new(0x67F).unwrap()).try_into();
-        assert_eq!(cob, Ok(CommunicationObject::RxSdo(127.try_into().unwrap())));
-        let cob: Result<CommunicationObject> =
+        assert_eq!(
+            result.unwrap(),
+            CommunicationObject::RxSdo(127.try_into().unwrap())
+        );
+        let result: Result<CommunicationObject> =
             socketcan::Id::Extended(socketcan::ExtendedId::new(0x0000).unwrap()).try_into();
-        assert_eq!(cob, Err(Error::CanFdNotSupported));
+        match result.unwrap_err() {
+            Error::CanFdNotSupported => (),
+            _ => panic!("Error mismatch"),
+        }
     }
 }

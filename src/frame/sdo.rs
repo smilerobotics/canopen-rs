@@ -160,45 +160,45 @@ mod tests {
     #[test]
     fn test_ccs_from_num() {
         assert_eq!(
-            ClientCommandSpecifier::from_num(0),
-            Ok(ClientCommandSpecifier::SegmentDownload)
+            ClientCommandSpecifier::from_num(0).unwrap(),
+            ClientCommandSpecifier::SegmentDownload
         );
         assert_eq!(
-            ClientCommandSpecifier::from_num(1),
-            Ok(ClientCommandSpecifier::InitiateDownload)
+            ClientCommandSpecifier::from_num(1).unwrap(),
+            ClientCommandSpecifier::InitiateDownload
         );
         assert_eq!(
-            ClientCommandSpecifier::from_num(2),
-            Ok(ClientCommandSpecifier::InitiateUpload)
+            ClientCommandSpecifier::from_num(2).unwrap(),
+            ClientCommandSpecifier::InitiateUpload
         );
         assert_eq!(
-            ClientCommandSpecifier::from_num(3),
-            Ok(ClientCommandSpecifier::SegmentUpload)
+            ClientCommandSpecifier::from_num(3).unwrap(),
+            ClientCommandSpecifier::SegmentUpload
         );
         assert_eq!(
-            ClientCommandSpecifier::from_num(4),
-            Ok(ClientCommandSpecifier::AbortTransfer)
+            ClientCommandSpecifier::from_num(4).unwrap(),
+            ClientCommandSpecifier::AbortTransfer
         );
         assert_eq!(
-            ClientCommandSpecifier::from_num(5),
-            Ok(ClientCommandSpecifier::BlockUpload)
+            ClientCommandSpecifier::from_num(5).unwrap(),
+            ClientCommandSpecifier::BlockUpload
         );
         assert_eq!(
-            ClientCommandSpecifier::from_num(6),
-            Ok(ClientCommandSpecifier::BlockDownload)
+            ClientCommandSpecifier::from_num(6).unwrap(),
+            ClientCommandSpecifier::BlockDownload
         );
-        assert_eq!(
-            ClientCommandSpecifier::from_num(7),
-            Err(Error::InvalidClientCommandSpecifier(7))
-        );
-        assert_eq!(
-            ClientCommandSpecifier::from_num(8),
-            Err(Error::InvalidClientCommandSpecifier(8))
-        );
-        assert_eq!(
-            ClientCommandSpecifier::from_num(255),
-            Err(Error::InvalidClientCommandSpecifier(255))
-        );
+        match ClientCommandSpecifier::from_num(7).unwrap_err() {
+            Error::InvalidClientCommandSpecifier(7) => (),
+            _ => panic!("Error mismatch"),
+        };
+        match ClientCommandSpecifier::from_num(8).unwrap_err() {
+            Error::InvalidClientCommandSpecifier(8) => (),
+            _ => panic!("Error mismatch"),
+        };
+        match ClientCommandSpecifier::from_num(255).unwrap_err() {
+            Error::InvalidClientCommandSpecifier(255) => (),
+            _ => panic!("Error mismatch"),
+        };
     }
 
     #[test]
@@ -284,8 +284,9 @@ mod tests {
                 Direction::Rx,
                 1.try_into().unwrap(),
                 &[0x40, 0x18, 0x10, 0x02, 0x00, 0x00, 0x00, 0x00],
-            ),
-            Ok(SdoFrame {
+            )
+            .unwrap(),
+            SdoFrame {
                 direction: Direction::Rx,
                 ccs: ClientCommandSpecifier::InitiateUpload,
                 node_id: 1.try_into().unwrap(),
@@ -294,15 +295,16 @@ mod tests {
                 size: None,
                 expedited: false,
                 data: vec![],
-            })
+            }
         );
         assert_eq!(
             SdoFrame::new_with_bytes(
                 Direction::Rx,
                 1.try_into().unwrap(),
                 &[0x2F, 0x02, 0x14, 0x02, 0xFF, 0x00, 0x00, 0x00],
-            ),
-            Ok(SdoFrame {
+            )
+            .unwrap(),
+            SdoFrame {
                 direction: Direction::Rx,
                 ccs: ClientCommandSpecifier::InitiateDownload,
                 node_id: 1.try_into().unwrap(),
@@ -311,15 +313,16 @@ mod tests {
                 size: Some(1),
                 expedited: true,
                 data: vec![0xFF],
-            })
+            }
         );
         assert_eq!(
             SdoFrame::new_with_bytes(
                 Direction::Rx,
                 2.try_into().unwrap(),
                 &[0x2B, 0x17, 0x10, 0x00, 0xE8, 0x03, 0x00, 0x00],
-            ),
-            Ok(SdoFrame {
+            )
+            .unwrap(),
+            SdoFrame {
                 direction: Direction::Rx,
                 ccs: ClientCommandSpecifier::InitiateDownload,
                 node_id: 2.try_into().unwrap(),
@@ -328,15 +331,16 @@ mod tests {
                 size: Some(2),
                 expedited: true,
                 data: vec![0xE8, 0x03],
-            })
+            }
         );
         assert_eq!(
             SdoFrame::new_with_bytes(
                 Direction::Rx,
                 3.try_into().unwrap(),
                 &[0x23, 0x00, 0x12, 0x01, 0x0A, 0x06, 0x00, 0x00],
-            ),
-            Ok(SdoFrame {
+            )
+            .unwrap(),
+            SdoFrame {
                 direction: Direction::Rx,
                 ccs: ClientCommandSpecifier::InitiateDownload,
                 node_id: 3.try_into().unwrap(),
@@ -345,15 +349,16 @@ mod tests {
                 size: Some(4),
                 expedited: true,
                 data: vec![0x0A, 0x06, 0x00, 0x00],
-            })
+            }
         );
         assert_eq!(
             SdoFrame::new_with_bytes(
                 Direction::Tx,
                 4.try_into().unwrap(),
                 &[0x43, 0x00, 0x10, 0x00, 0x92, 0x01, 0x02, 0x00],
-            ),
-            Ok(SdoFrame {
+            )
+            .unwrap(),
+            SdoFrame {
                 direction: Direction::Tx,
                 ccs: ClientCommandSpecifier::InitiateUpload,
                 node_id: 4.try_into().unwrap(),
@@ -362,15 +367,16 @@ mod tests {
                 size: Some(4),
                 expedited: true,
                 data: vec![0x92, 0x01, 0x02, 0x00],
-            })
+            }
         );
         assert_eq!(
             SdoFrame::new_with_bytes(
                 Direction::Tx,
                 5.try_into().unwrap(),
                 &[0x80, 0x00, 0x10, 0x00, 0x02, 0x00, 0x01, 0x06],
-            ),
-            Ok(SdoFrame {
+            )
+            .unwrap(),
+            SdoFrame {
                 direction: Direction::Tx,
                 ccs: ClientCommandSpecifier::AbortTransfer,
                 node_id: 5.try_into().unwrap(),
@@ -379,7 +385,7 @@ mod tests {
                 size: None,
                 expedited: false,
                 data: vec![0x02, 0x00, 0x01, 0x06],
-            })
+            }
         );
     }
 

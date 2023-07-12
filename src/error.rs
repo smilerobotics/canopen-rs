@@ -1,6 +1,6 @@
-//use thiserror::Error;
+use std::io;
 
-#[derive(Debug, PartialEq, thiserror::Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("Invalid Node ID ({})", .0)]
     InvalidNodeId(u8),
@@ -18,6 +18,8 @@ pub enum Error {
     CanFdNotSupported,
     #[error("Not implemented")]
     NotImplemented,
+    #[error(transparent)]
+    Io(#[from] io::Error),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

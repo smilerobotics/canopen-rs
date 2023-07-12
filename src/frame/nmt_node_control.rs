@@ -89,7 +89,7 @@ impl ConvertibleFrame for NmtNodeControlFrame {
     }
 
     fn frame_data(&self) -> std::vec::Vec<u8> {
-        let mut data = std::vec::Vec::new();
+        let mut data = std::vec::Vec::with_capacity(Self::FRAME_DATA_SIZE);
         data.push(self.command.as_byte());
         data.push(self.address.as_byte());
         assert_eq!(data.len(), Self::FRAME_DATA_SIZE);

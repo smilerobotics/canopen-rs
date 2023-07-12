@@ -134,7 +134,7 @@ impl ConvertibleFrame for SdoFrame {
 
     fn frame_data(&self) -> std::vec::Vec<u8> {
         assert!(self.data.len() <= Self::DATA_CONTENT_SIZE);
-        let mut data = std::vec::Vec::new();
+        let mut data = std::vec::Vec::with_capacity(Self::FRAME_DATA_SIZE);
         // cf. https://en.wikipedia.org/wiki/CANopen#Service_Data_Object_(SDO)_protocol
         data.push(
             ((self.ccs as u8) << 5)

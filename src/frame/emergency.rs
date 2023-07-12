@@ -47,7 +47,7 @@ impl ConvertibleFrame for EmergencyFrame {
     }
 
     fn frame_data(&self) -> std::vec::Vec<u8> {
-        let mut data = std::vec::Vec::new();
+        let mut data = std::vec::Vec::with_capacity(Self::FRAME_DATA_SIZE);
         data.extend_from_slice(&self.error_code.to_le_bytes());
         data.push(self.error_register);
         data.resize(Self::FRAME_DATA_SIZE, 0x00);

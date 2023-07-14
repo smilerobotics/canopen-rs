@@ -29,3 +29,6 @@
 
 # Wikipedia
 \ben\.wikipedia\.org/wiki/[-\w%.#]+
+
+# CANopen
+CANopen

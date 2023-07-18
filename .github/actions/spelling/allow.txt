@@ -1,0 +1,7 @@
+canopen
+github
+https
+socketcan
+ssh
+thiserror
+ubuntu

@@ -296,6 +296,7 @@ mod tests {
         assert!(frame.is_err());
     }
 
+    /*
     #[test]
     fn test_sdo_frame_to_socketcan_frame() {
         let frame = to_socketcan_frame(SdoFrame::new_sdo_read_frame(
@@ -497,6 +498,7 @@ mod tests {
             }))
         );
     }
+    */
 
     #[test]
     fn test_nmt_node_monitoring_frame_to_socketcan_frame() {

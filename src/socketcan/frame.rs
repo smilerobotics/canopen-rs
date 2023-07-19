@@ -347,7 +347,7 @@ mod tests {
 
         let frame = to_socketcan_frame(SdoFrame {
             direction: Direction::Tx,
-            ccs: ClientCommandSpecifier::InitiateUpload,
+            ccs: ClientCommandSpecifier::InitiateUploadRequest,
             node_id: 4.try_into().unwrap(),
             // Device type
             index: 0x1000,
@@ -393,7 +393,7 @@ mod tests {
             Ok(CanOpenFrame::SdoFrame(SdoFrame {
                 direction: Direction::Rx,
                 node_id: 1.try_into().unwrap(),
-                ccs: ClientCommandSpecifier::InitiateUpload,
+                ccs: ClientCommandSpecifier::InitiateUploadRequest,
                 index: 0x1018,
                 sub_index: 2,
                 size: None,
@@ -412,7 +412,7 @@ mod tests {
             Ok(CanOpenFrame::SdoFrame(SdoFrame {
                 direction: Direction::Rx,
                 node_id: 1.try_into().unwrap(),
-                ccs: ClientCommandSpecifier::InitiateDownload,
+                ccs: ClientCommandSpecifier::InitiateDownloadRequest,
                 index: 0x1402,
                 sub_index: 2,
                 size: Some(1),
@@ -431,7 +431,7 @@ mod tests {
             Ok(CanOpenFrame::SdoFrame(SdoFrame {
                 direction: Direction::Rx,
                 node_id: 2.try_into().unwrap(),
-                ccs: ClientCommandSpecifier::InitiateDownload,
+                ccs: ClientCommandSpecifier::InitiateDownloadRequest,
                 index: 0x1017,
                 sub_index: 0,
                 size: Some(2),
@@ -450,7 +450,7 @@ mod tests {
             Ok(CanOpenFrame::SdoFrame(SdoFrame {
                 direction: Direction::Rx,
                 node_id: 3.try_into().unwrap(),
-                ccs: ClientCommandSpecifier::InitiateDownload,
+                ccs: ClientCommandSpecifier::InitiateDownloadRequest,
                 index: 0x1200,
                 sub_index: 1,
                 size: Some(4),
@@ -469,7 +469,7 @@ mod tests {
             Ok(CanOpenFrame::SdoFrame(SdoFrame {
                 direction: Direction::Tx,
                 node_id: 4.try_into().unwrap(),
-                ccs: ClientCommandSpecifier::InitiateUpload,
+                ccs: ClientCommandSpecifier::InitiateUploadRequest,
                 index: 0x1000,
                 sub_index: 0,
                 size: Some(4),

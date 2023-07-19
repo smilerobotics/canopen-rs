@@ -10,10 +10,10 @@ pub(crate) enum Direction {
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub(crate) enum ClientCommandSpecifier {
-    SegmentDownload = 0,
-    InitiateDownload = 1,
-    InitiateUpload = 2,
-    SegmentUpload = 3,
+    DownloadSegmentRequest = 0,
+    InitiateDownloadRequest = 1,
+    InitiateUploadRequest = 2,
+    UploadSegmentRequest = 3,
     AbortTransfer = 4,
     BlockUpload = 5,
     BlockDownload = 6,
@@ -22,10 +22,10 @@ pub(crate) enum ClientCommandSpecifier {
 impl ClientCommandSpecifier {
     fn from_num(value: u8) -> Result<Self> {
         match value {
-            0 => Ok(Self::SegmentDownload),
-            1 => Ok(Self::InitiateDownload),
-            2 => Ok(Self::InitiateUpload),
-            3 => Ok(Self::SegmentUpload),
+            0 => Ok(Self::DownloadSegmentRequest),
+            1 => Ok(Self::InitiateDownloadRequest),
+            2 => Ok(Self::InitiateUploadRequest),
+            3 => Ok(Self::UploadSegmentRequest),
             4 => Ok(Self::AbortTransfer),
             5 => Ok(Self::BlockUpload),
             6 => Ok(Self::BlockDownload),
@@ -54,7 +54,7 @@ impl SdoFrame {
         Self {
             direction: Direction::Rx,
             node_id,
-            ccs: ClientCommandSpecifier::InitiateUpload,
+            ccs: ClientCommandSpecifier::InitiateUploadRequest,
             index,
             sub_index,
             size: None,
@@ -72,7 +72,7 @@ impl SdoFrame {
         Self {
             direction: Direction::Rx,
             node_id,
-            ccs: ClientCommandSpecifier::InitiateDownload,
+            ccs: ClientCommandSpecifier::InitiateDownloadRequest,
             index,
             sub_index,
             size: Some(data.len()),
@@ -161,19 +161,19 @@ mod tests {
     fn test_ccs_from_num() {
         assert_eq!(
             ClientCommandSpecifier::from_num(0),
-            Ok(ClientCommandSpecifier::SegmentDownload)
+            Ok(ClientCommandSpecifier::DownloadSegmentRequest)
         );
         assert_eq!(
             ClientCommandSpecifier::from_num(1),
-            Ok(ClientCommandSpecifier::InitiateDownload)
+            Ok(ClientCommandSpecifier::InitiateDownloadRequest)
         );
         assert_eq!(
             ClientCommandSpecifier::from_num(2),
-            Ok(ClientCommandSpecifier::InitiateUpload)
+            Ok(ClientCommandSpecifier::InitiateUploadRequest)
         );
         assert_eq!(
             ClientCommandSpecifier::from_num(3),
-            Ok(ClientCommandSpecifier::SegmentUpload)
+            Ok(ClientCommandSpecifier::UploadSegmentRequest)
         );
         assert_eq!(
             ClientCommandSpecifier::from_num(4),
@@ -208,7 +208,7 @@ mod tests {
             frame,
             SdoFrame {
                 direction: Direction::Rx,
-                ccs: ClientCommandSpecifier::InitiateUpload,
+                ccs: ClientCommandSpecifier::InitiateUploadRequest,
                 node_id: 1.try_into().unwrap(),
                 index: 0x1018,
                 sub_index: 2,
@@ -226,7 +226,7 @@ mod tests {
             frame,
             SdoFrame {
                 direction: Direction::Rx,
-                ccs: ClientCommandSpecifier::InitiateDownload,
+                ccs: ClientCommandSpecifier::InitiateDownloadRequest,
                 node_id: 1.try_into().unwrap(),
                 index: 0x1402,
                 sub_index: 2,
@@ -246,7 +246,7 @@ mod tests {
             frame,
             SdoFrame {
                 direction: Direction::Rx,
-                ccs: ClientCommandSpecifier::InitiateDownload,
+                ccs: ClientCommandSpecifier::InitiateDownloadRequest,
                 node_id: 2.try_into().unwrap(),
                 index: 0x1017,
                 sub_index: 0,
@@ -266,7 +266,7 @@ mod tests {
             frame,
             SdoFrame {
                 direction: Direction::Rx,
-                ccs: ClientCommandSpecifier::InitiateDownload,
+                ccs: ClientCommandSpecifier::InitiateDownloadRequest,
                 node_id: 3.try_into().unwrap(),
                 index: 0x1200,
                 sub_index: 1,
@@ -287,7 +287,7 @@ mod tests {
             ),
             Ok(SdoFrame {
                 direction: Direction::Rx,
-                ccs: ClientCommandSpecifier::InitiateUpload,
+                ccs: ClientCommandSpecifier::InitiateUploadRequest,
                 node_id: 1.try_into().unwrap(),
                 index: 0x1018,
                 sub_index: 2,
@@ -304,7 +304,7 @@ mod tests {
             ),
             Ok(SdoFrame {
                 direction: Direction::Rx,
-                ccs: ClientCommandSpecifier::InitiateDownload,
+                ccs: ClientCommandSpecifier::InitiateDownloadRequest,
                 node_id: 1.try_into().unwrap(),
                 index: 0x1402,
                 sub_index: 2,
@@ -321,7 +321,7 @@ mod tests {
             ),
             Ok(SdoFrame {
                 direction: Direction::Rx,
-                ccs: ClientCommandSpecifier::InitiateDownload,
+                ccs: ClientCommandSpecifier::InitiateDownloadRequest,
                 node_id: 2.try_into().unwrap(),
                 index: 0x1017,
                 sub_index: 0,
@@ -338,7 +338,7 @@ mod tests {
             ),
             Ok(SdoFrame {
                 direction: Direction::Rx,
-                ccs: ClientCommandSpecifier::InitiateDownload,
+                ccs: ClientCommandSpecifier::InitiateDownloadRequest,
                 node_id: 3.try_into().unwrap(),
                 index: 0x1200,
                 sub_index: 1,
@@ -355,7 +355,7 @@ mod tests {
             ),
             Ok(SdoFrame {
                 direction: Direction::Tx,
-                ccs: ClientCommandSpecifier::InitiateUpload,
+                ccs: ClientCommandSpecifier::InitiateUploadRequest,
                 node_id: 4.try_into().unwrap(),
                 index: 0x1000,
                 sub_index: 0,
@@ -387,7 +387,7 @@ mod tests {
     fn test_communication_object() {
         let frame = SdoFrame {
             direction: Direction::Rx,
-            ccs: ClientCommandSpecifier::InitiateUpload,
+            ccs: ClientCommandSpecifier::InitiateUploadRequest,
             node_id: 1.try_into().unwrap(),
             // Product code
             index: 0x1018,
@@ -403,7 +403,7 @@ mod tests {
 
         let frame = SdoFrame {
             direction: Direction::Rx,
-            ccs: ClientCommandSpecifier::InitiateDownload,
+            ccs: ClientCommandSpecifier::InitiateDownloadRequest,
             node_id: 3.try_into().unwrap(),
             // COB-ID SDO client to server
             index: 0x1200,
@@ -419,7 +419,7 @@ mod tests {
 
         let frame = SdoFrame {
             direction: Direction::Tx,
-            ccs: ClientCommandSpecifier::InitiateUpload,
+            ccs: ClientCommandSpecifier::InitiateUploadRequest,
             node_id: 4.try_into().unwrap(),
             // Device type
             index: 0x1000,
@@ -456,7 +456,7 @@ mod tests {
 
         let data = SdoFrame {
             direction: Direction::Rx,
-            ccs: ClientCommandSpecifier::InitiateUpload,
+            ccs: ClientCommandSpecifier::InitiateUploadRequest,
             node_id: 1.try_into().unwrap(),
             // Product code
             index: 0x1018,
@@ -472,7 +472,7 @@ mod tests {
         buf.fill(0x00);
         let data = SdoFrame {
             direction: Direction::Rx,
-            ccs: ClientCommandSpecifier::InitiateDownload,
+            ccs: ClientCommandSpecifier::InitiateDownloadRequest,
             node_id: 1.try_into().unwrap(),
             // Transmission type RxPDO3
             index: 0x1402,
@@ -488,7 +488,7 @@ mod tests {
         buf.fill(0x00);
         let data = SdoFrame {
             direction: Direction::Rx,
-            ccs: ClientCommandSpecifier::InitiateDownload,
+            ccs: ClientCommandSpecifier::InitiateDownloadRequest,
             node_id: 2.try_into().unwrap(),
             // Producer heartbeat time
             index: 0x1017,
@@ -504,7 +504,7 @@ mod tests {
         buf.fill(0x00);
         let data = SdoFrame {
             direction: Direction::Rx,
-            ccs: ClientCommandSpecifier::InitiateDownload,
+            ccs: ClientCommandSpecifier::InitiateDownloadRequest,
             node_id: 3.try_into().unwrap(),
             // COB-ID SDO client to server
             index: 0x1200,
@@ -520,7 +520,7 @@ mod tests {
         buf.fill(0x00);
         let data = SdoFrame {
             direction: Direction::Tx,
-            ccs: ClientCommandSpecifier::InitiateUpload,
+            ccs: ClientCommandSpecifier::InitiateUploadRequest,
             node_id: 4.try_into().unwrap(),
             // Device type
             index: 0x1000,

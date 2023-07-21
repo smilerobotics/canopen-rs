@@ -66,7 +66,6 @@ mod tests {
 
     use super::*;
 
-    use crate::frame::sdo::ClientCommandSpecifier;
     use crate::frame::{NmtCommand, NmtNodeControlAddress, NmtState};
 
     #[test]

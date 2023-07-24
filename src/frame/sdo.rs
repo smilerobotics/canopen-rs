@@ -1116,13 +1116,13 @@ mod tests {
         assert_eq!(
             SdoFrame::new_with_bytes(
                 Direction::Rx,
-                1.try_into().unwrap(),
+                2.try_into().unwrap(),
                 &[0x2F, 0x02, 0x14, 0x02, 0xFF, 0x00, 0x00, 0x00],
             )
             .unwrap(),
             SdoFrame {
                 direction: Direction::Rx,
-                node_id: 1.try_into().unwrap(),
+                node_id: 2.try_into().unwrap(),
                 command: SdoCommand::InitiateDownloadRequest {
                     index: 0x1402,
                     sub_index: 2,
@@ -1136,13 +1136,13 @@ mod tests {
         assert_eq!(
             SdoFrame::new_with_bytes(
                 Direction::Rx,
-                2.try_into().unwrap(),
+                3.try_into().unwrap(),
                 &[0x2B, 0x17, 0x10, 0x00, 0xE8, 0x03, 0x00, 0x00],
             )
             .unwrap(),
             SdoFrame {
                 direction: Direction::Rx,
-                node_id: 2.try_into().unwrap(),
+                node_id: 3.try_into().unwrap(),
                 command: SdoCommand::InitiateDownloadRequest {
                     index: 0x1017,
                     sub_index: 0,
@@ -1156,13 +1156,13 @@ mod tests {
         assert_eq!(
             SdoFrame::new_with_bytes(
                 Direction::Rx,
-                3.try_into().unwrap(),
+                4.try_into().unwrap(),
                 &[0x23, 0x00, 0x12, 0x01, 0x0A, 0x06, 0x00, 0x00],
             )
             .unwrap(),
             SdoFrame {
                 direction: Direction::Rx,
-                node_id: 3.try_into().unwrap(),
+                node_id: 4.try_into().unwrap(),
                 command: SdoCommand::InitiateDownloadRequest {
                     index: 0x1200,
                     sub_index: 1,
@@ -1175,14 +1175,31 @@ mod tests {
         );
         assert_eq!(
             SdoFrame::new_with_bytes(
+                Direction::Rx,
+                5.try_into().unwrap(),
+                &[0x80, 0x01, 0x20, 0x03, 0x01, 0x00, 0x04, 0x05],
+            )
+            .unwrap(),
+            SdoFrame {
+                direction: Direction::Rx,
+                node_id: 5.try_into().unwrap(),
+                command: SdoCommand::AbortTransfer {
+                    index: 0x2001,
+                    sub_index: 3,
+                    abort_code: 0x05040001,
+                }
+            }
+        );
+        assert_eq!(
+            SdoFrame::new_with_bytes(
                 Direction::Tx,
-                4.try_into().unwrap(),
+                6.try_into().unwrap(),
                 &[0x43, 0x00, 0x10, 0x00, 0x92, 0x01, 0x02, 0x00],
             )
             .unwrap(),
             SdoFrame {
                 direction: Direction::Tx,
-                node_id: 4.try_into().unwrap(),
+                node_id: 6.try_into().unwrap(),
                 command: SdoCommand::InitiateUploadResponse {
                     index: 0x1000,
                     sub_index: 0,
@@ -1196,13 +1213,13 @@ mod tests {
         assert_eq!(
             SdoFrame::new_with_bytes(
                 Direction::Tx,
-                1.try_into().unwrap(),
+                7.try_into().unwrap(),
                 &[0x60, 0x02, 0x14, 0x02, 0x00, 0x00, 0x00, 0x00],
             )
             .unwrap(),
             SdoFrame {
                 direction: Direction::Tx,
-                node_id: 1.try_into().unwrap(),
+                node_id: 7.try_into().unwrap(),
                 command: SdoCommand::InitiateDownloadResponse {
                     index: 0x1402,
                     sub_index: 2,
@@ -1212,13 +1229,13 @@ mod tests {
         assert_eq!(
             SdoFrame::new_with_bytes(
                 Direction::Tx,
-                5.try_into().unwrap(),
+                8.try_into().unwrap(),
                 &[0x80, 0x00, 0x10, 0x00, 0x02, 0x00, 0x01, 0x06],
             )
             .unwrap(),
             SdoFrame {
                 direction: Direction::Tx,
-                node_id: 5.try_into().unwrap(),
+                node_id: 8.try_into().unwrap(),
                 command: SdoCommand::AbortTransfer {
                     index: 0x1000,
                     sub_index: 0,
@@ -1245,7 +1262,7 @@ mod tests {
         assert_eq!(
             SdoFrame {
                 direction: Direction::Rx,
-                node_id: 3.try_into().unwrap(),
+                node_id: 2.try_into().unwrap(),
                 command: SdoCommand::InitiateDownloadRequest {
                     index: 0x1200,
                     sub_index: 1,
@@ -1256,157 +1273,134 @@ mod tests {
                 }
             }
             .communication_object(),
+            CommunicationObject::RxSdo(2.try_into().unwrap())
+        );
+        assert_eq!(
+            SdoFrame {
+                direction: Direction::Rx,
+                node_id: 3.try_into().unwrap(),
+                command: SdoCommand::AbortTransfer {
+                    index: 0x2001,
+                    sub_index: 3,
+                    abort_code: 0x05040001,
+                }
+            }
+            .communication_object(),
             CommunicationObject::RxSdo(3.try_into().unwrap())
         );
-        /*
-            let frame = SdoFrame {
-                direction: Direction::Rx,
-                ccs: ClientCommandSpecifier::InitiateDownloadRequest,
-                node_id: 3.try_into().unwrap(),
-                // COB-ID SDO client to server
-                index: 0x1200,
-                sub_index: 1,
-                size: Some(4),
-                expedited: true,
-                data: vec![0x0A, 0x06, 0x00, 0x00],
-            };
-            assert_eq!(
-                frame.communication_object(),
-                CommunicationObject::RxSdo(3.try_into().unwrap())
-            );
-
-            let frame = SdoFrame {
+        assert_eq!(
+            SdoFrame {
                 direction: Direction::Tx,
-                ccs: ClientCommandSpecifier::InitiateUploadRequest,
                 node_id: 4.try_into().unwrap(),
-                // Device type
-                index: 0x1000,
-                sub_index: 0,
-                size: Some(4),
-                expedited: true,
-                data: vec![0x92, 0x01, 0x02, 0x00],
-            };
-            assert_eq!(
-                frame.communication_object(),
-                CommunicationObject::TxSdo(4.try_into().unwrap())
-            );
-
-            let frame = SdoFrame {
+                command: SdoCommand::InitiateUploadResponse {
+                    index: 0x1000,
+                    sub_index: 0,
+                    transfer_type: SdoTransferType::Expedited {
+                        sized: true,
+                        data: vec![0x92, 0x01, 0x02, 0x00],
+                    }
+                }
+            }
+            .communication_object(),
+            CommunicationObject::TxSdo(4.try_into().unwrap())
+        );
+        assert_eq!(
+            SdoFrame {
                 direction: Direction::Tx,
-                ccs: ClientCommandSpecifier::AbortTransfer,
                 node_id: 5.try_into().unwrap(),
-                // Device type
-                index: 0x1000,
-                sub_index: 0,
-                size: Some(4),
-                expedited: false,
-                data: vec![0x02, 0x00, 0x01, 0x06], // SDO_ERR_ACCESS_RO
-            };
-            assert_eq!(
-                frame.communication_object(),
-                CommunicationObject::TxSdo(5.try_into().unwrap())
-            );
-        */
+                command: SdoCommand::InitiateDownloadResponse {
+                    index: 0x1402,
+                    sub_index: 2,
+                }
+            }
+            .communication_object(),
+            CommunicationObject::TxSdo(5.try_into().unwrap())
+        );
+        assert_eq!(
+            SdoFrame {
+                direction: Direction::Tx,
+                node_id: 6.try_into().unwrap(),
+                command: SdoCommand::AbortTransfer {
+                    index: 0x1000,
+                    sub_index: 0,
+                    abort_code: 0x06010002
+                }
+            }
+            .communication_object(),
+            CommunicationObject::TxSdo(6.try_into().unwrap())
+        );
     }
-    /*
-        #[test]
-        fn test_set_data() {
-            let mut buf = [0u8; 8];
 
-            let data = SdoFrame {
+    #[test]
+    fn test_frame_data() {
+        assert_eq!(
+            SdoFrame {
                 direction: Direction::Rx,
-                ccs: ClientCommandSpecifier::InitiateUploadRequest,
                 node_id: 1.try_into().unwrap(),
-                // Product code
-                index: 0x1018,
-                sub_index: 2,
-                size: None,
-                expedited: false,
-                data: vec![],
+                command: SdoCommand::InitiateDownloadRequest {
+                    index: 0x2001,
+                    sub_index: 3,
+                    transfer_type: SdoTransferType::Expedited {
+                        sized: true,
+                        data: vec![0x12, 0x34, 0x56, 0x78]
+                    }
+                }
             }
-            .frame_data();
-            assert_eq!(data.len(), 8);
-            assert_eq!(data, &[0x40, 0x18, 0x10, 0x02, 0x00, 0x00, 0x00, 0x00]);
-
-            buf.fill(0x00);
-            let data = SdoFrame {
-                direction: Direction::Rx,
-                ccs: ClientCommandSpecifier::InitiateDownloadRequest,
-                node_id: 1.try_into().unwrap(),
-                // Transmission type RxPDO3
-                index: 0x1402,
-                sub_index: 2,
-                size: Some(1),
-                expedited: true,
-                data: vec![0xFF],
-            }
-            .frame_data();
-            assert_eq!(data.len(), 8);
-            assert_eq!(data, &[0x2F, 0x02, 0x14, 0x02, 0xFF, 0x00, 0x00, 0x00]);
-
-            buf.fill(0x00);
-            let data = SdoFrame {
-                direction: Direction::Rx,
-                ccs: ClientCommandSpecifier::InitiateDownloadRequest,
+            .frame_data(),
+            vec![0x23, 0x01, 0x20, 0x03, 0x12, 0x34, 0x56, 0x78]
+        );
+        assert_eq!(
+            SdoFrame {
+                direction: Direction::Tx,
                 node_id: 2.try_into().unwrap(),
-                // Producer heartbeat time
-                index: 0x1017,
-                sub_index: 0,
-                size: Some(2),
-                expedited: true,
-                data: vec![0xE8, 0x03],
+                command: SdoCommand::InitiateDownloadResponse {
+                    index: 0x2001,
+                    sub_index: 3,
+                }
             }
-            .frame_data();
-            assert_eq!(data.len(), 8);
-            assert_eq!(data, &[0x2B, 0x17, 0x10, 0x00, 0xE8, 0x03, 0x00, 0x00]);
-
-            buf.fill(0x00);
-            let data = SdoFrame {
+            .frame_data(),
+            vec![0x60, 0x01, 0x20, 0x03, 0x00, 0x00, 0x00, 0x00]
+        );
+        assert_eq!(
+            SdoFrame {
                 direction: Direction::Rx,
-                ccs: ClientCommandSpecifier::InitiateDownloadRequest,
                 node_id: 3.try_into().unwrap(),
-                // COB-ID SDO client to server
-                index: 0x1200,
-                sub_index: 1,
-                size: Some(4),
-                expedited: true,
-                data: vec![0x0A, 0x06, 0x00, 0x00],
+                command: SdoCommand::InitiateUploadRequest {
+                    index: 0x2001,
+                    sub_index: 3,
+                }
             }
-            .frame_data();
-            assert_eq!(data.len(), 8);
-            assert_eq!(data, &[0x23, 0x00, 0x12, 0x01, 0x0A, 0x06, 0x00, 0x00]);
-
-            buf.fill(0x00);
-            let data = SdoFrame {
+            .frame_data(),
+            vec![0x40, 0x01, 0x20, 0x03, 0x00, 0x00, 0x00, 0x00]
+        );
+        assert_eq!(
+            SdoFrame {
                 direction: Direction::Tx,
-                ccs: ClientCommandSpecifier::InitiateUploadRequest,
                 node_id: 4.try_into().unwrap(),
-                // Device type
-                index: 0x1000,
-                sub_index: 0,
-                size: Some(4),
-                expedited: true,
-                data: vec![0x92, 0x01, 0x02, 0x00],
+                command: SdoCommand::InitiateUploadResponse {
+                    index: 0x2001,
+                    sub_index: 3,
+                    transfer_type: SdoTransferType::Expedited {
+                        sized: true,
+                        data: vec![0x12, 0x34, 0x56, 0x78]
+                    }
+                }
             }
-            .frame_data();
-            assert_eq!(data.len(), 8);
-            assert_eq!(data, &[0x43, 0x00, 0x10, 0x00, 0x92, 0x01, 0x02, 0x00]);
-
-            buf.fill(0x00);
-            let data = SdoFrame {
-                direction: Direction::Tx,
-                ccs: ClientCommandSpecifier::AbortTransfer,
+            .frame_data(),
+            vec![0x43, 0x01, 0x20, 0x03, 0x12, 0x34, 0x56, 0x78]
+        );
+        assert_eq!(
+            SdoFrame {
+                direction: Direction::Rx,
                 node_id: 5.try_into().unwrap(),
-                // Device type
-                index: 0x1000,
-                sub_index: 0,
-                size: None,
-                expedited: false,
-                data: vec![0x02, 0x00, 0x01, 0x06], // SDO_ERR_ACCESS_RO
+                command: SdoCommand::AbortTransfer {
+                    index: 0x2001,
+                    sub_index: 3,
+                    abort_code: 0x05040001,
+                }
             }
-            .frame_data();
-            assert_eq!(data.len(), 8);
-            assert_eq!(data, &[0x80, 0x00, 0x10, 0x00, 0x02, 0x00, 0x01, 0x06]);
-        }
-    */
+            .frame_data(),
+            vec![0x80, 0x01, 0x20, 0x03, 0x01, 0x00, 0x04, 0x05]
+        );
+    }
 }

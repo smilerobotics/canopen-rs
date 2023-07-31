@@ -19,11 +19,9 @@ fn main() {
     let frame: CanOpenFrame = sock.receive().unwrap().try_into().unwrap();
     println!("received: {:?}", frame);
 
-    sock.transmit(
-        &CanOpenFrame::new_sdo_read_frame(NODE_ID.try_into().unwrap(), 0x1018, 2) // read `Product code`
-            .into(),
-    )
-    .unwrap();
+    let frame = CanOpenFrame::new_sdo_read_frame(NODE_ID.try_into().unwrap(), 0x1018, 2); // read `Product code`
+    println!("send: {:?}", frame);
+    sock.transmit(&frame.into()).unwrap();
 
     let frame: CanOpenFrame = sock.receive().unwrap().try_into().unwrap();
     println!("received: {:?}", frame);

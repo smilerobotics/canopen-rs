@@ -64,7 +64,7 @@ impl NmtNodeControlFrame {
     }
 
     pub(crate) fn new_with_bytes(bytes: &[u8]) -> Result<Self> {
-        if bytes.len() != 2 {
+        if bytes.len() != Self::FRAME_DATA_SIZE {
             return Err(Error::InvalidDataLength {
                 length: bytes.len(),
                 data_type: "NmtNodeControlFrame".to_owned(),

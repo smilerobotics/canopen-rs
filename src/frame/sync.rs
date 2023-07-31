@@ -10,6 +10,12 @@ impl SyncFrame {
     }
 }
 
+impl Default for SyncFrame {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl From<SyncFrame> for CanOpenFrame {
     fn from(frame: SyncFrame) -> Self {
         CanOpenFrame::SyncFrame(frame)
